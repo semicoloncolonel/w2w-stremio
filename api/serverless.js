@@ -15,6 +15,22 @@ module.exports = (req, res) => {
     return;
   }
 
+  // Intercept configured manifest to ensure configurable flag is present
+  if (path.endsWith("/manifest.json") && path !== "/manifest.json") {
+    const originalWrite = res.end.bind(res);
+    res.end = (data) => {
+      try {
+        const manifest = JSON.parse(data);
+        if (!manifest.behaviorHints) manifest.behaviorHints = {};
+        manifest.behaviorHints.configurable = true;
+        manifest.behaviorHints.configurationRequired = false;
+        originalWrite(JSON.stringify(manifest));
+      } catch {
+        originalWrite(data);
+      }
+    };
+  }
+
   router(req, res, () => {
     res.statusCode = 404;
     res.end();
