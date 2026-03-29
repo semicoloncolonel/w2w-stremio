@@ -5,9 +5,10 @@ const configurePage = require("../lib/configure");
 const router = getRouter(addonInterface);
 
 module.exports = (req, res) => {
-  // Serve custom configure page at root and /configure
-  const path = req.url.split("?")[0].replace(/\/+$/, "") || "/";
-  if (path === "/" || path === "/configure") {
+  const path = decodeURIComponent(req.url).split("?")[0].replace(/\/+$/, "") || "/";
+
+  // Serve custom configure page at root, /configure, and /{config}/configure
+  if (path === "/" || path === "/configure" || path.endsWith("/configure")) {
     const html = configurePage(addonInterface.manifest, req.headers.host);
     res.setHeader("Content-Type", "text/html");
     res.end(html);
