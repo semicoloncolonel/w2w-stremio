@@ -1,15 +1,16 @@
-const { getRouter, publishToCentral } = require("stremio-addon-sdk");
+const { getRouter } = require("stremio-addon-sdk");
 const addonInterface = require("../addon");
-const landingTemplate = require("stremio-addon-sdk/src/landingTemplate");
+const configurePage = require("../lib/configure");
 
 const router = getRouter(addonInterface);
 
 module.exports = (req, res) => {
-  // Serve the configure/landing page at root
-  if (req.url === "/" || req.url === "/configure") {
-    const landingHTML = landingTemplate(addonInterface.manifest);
+  // Serve custom configure page at root and /configure
+  const path = req.url.split("?")[0].replace(/\/+$/, "") || "/";
+  if (path === "/" || path === "/configure") {
+    const html = configurePage(addonInterface.manifest, req.headers.host);
     res.setHeader("Content-Type", "text/html");
-    res.end(landingHTML);
+    res.end(html);
     return;
   }
 

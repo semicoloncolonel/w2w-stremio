@@ -90,7 +90,7 @@ const manifest = {
   name: "What to Watch",
   description:
     "Curated recommendations from Decider, Variety, Vulture, IndieWire, and NYT",
-  logo: "https://i.imgur.com/placeholder.png",
+  logo: "https://img.icons8.com/fluency/512/movie-projector.png",
   resources: ["catalog"],
   types: ["movie", "series"],
   idPrefixes: ["tt"],
