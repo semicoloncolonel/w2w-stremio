@@ -89,7 +89,7 @@ const manifest = {
   version: "1.0.0",
   name: "What to Watch",
   description:
-    "Curated recommendations from Decider, Variety, Vulture, IndieWire, and NYT",
+    "Editorial picks, new streaming releases, film festival lineups (Sundance, Cannes, Berlinale), and award nominees (Oscars, Golden Globes, Emmys)",
   logo: "https://img.icons8.com/fluency/512/movie-projector.png",
   resources: ["catalog"],
   types: ["movie", "series"],
