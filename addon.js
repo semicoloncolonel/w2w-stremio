@@ -13,6 +13,14 @@ const sources = {
 // "Now Streaming" source (separate catalog)
 const rtBrowse = require("./sources/rt-browse");
 
+// Film festival sources (separate catalogs per festival)
+const { sundance, cannes, berlinale } = require("./sources/festivals");
+const festivals = { sundance, cannes, berlinale };
+
+// Awards sources
+const { oscars, goldenGlobes, emmys } = require("./sources/awards");
+const awards = { oscars, goldenGlobes, emmys };
+
 const catalogs = [
   {
     id: "w2w",
@@ -30,6 +38,48 @@ const catalogs = [
     id: "now-streaming",
     type: "movie",
     name: "Now Streaming",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "sundance",
+    type: "movie",
+    name: "Sundance Film Festival",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "cannes",
+    type: "movie",
+    name: "Cannes Film Festival",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "berlinale",
+    type: "movie",
+    name: "Berlinale",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "oscars",
+    type: "movie",
+    name: "Oscar Nominees",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "goldenGlobes",
+    type: "movie",
+    name: "Golden Globe Nominees",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "goldenGlobes",
+    type: "series",
+    name: "Golden Globe Nominees",
+    extra: [{ name: "skip", isRequired: false }],
+  },
+  {
+    id: "emmys",
+    type: "series",
+    name: "Emmy Nominees",
     extra: [{ name: "skip", isRequired: false }],
   },
 ];
@@ -62,6 +112,12 @@ const manifest = {
     { key: "noIndiewire", type: "checkbox", title: "Exclude IndieWire" },
     { key: "noNyt", type: "checkbox", title: "Exclude New York Times" },
     { key: "noRt", type: "checkbox", title: "Exclude Now Streaming (Rotten Tomatoes)" },
+    { key: "noSundance", type: "checkbox", title: "Exclude Sundance" },
+    { key: "noCannes", type: "checkbox", title: "Exclude Cannes" },
+    { key: "noBerlinale", type: "checkbox", title: "Exclude Berlinale" },
+    { key: "noOscars", type: "checkbox", title: "Exclude Oscar Nominees" },
+    { key: "noGoldenGlobes", type: "checkbox", title: "Exclude Golden Globe Nominees" },
+    { key: "noEmmys", type: "checkbox", title: "Exclude Emmy Nominees" },
   ],
 };
 
@@ -122,6 +178,39 @@ builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
       return { metas, cacheMaxAge: 21600, staleRevalidate: 43200, staleError: 604800 };
     } catch (err) {
       console.error("Now Streaming error:", err.message);
+      return { metas: [] };
+    }
+  }
+
+  // Film festival catalogs
+  if (festivals[id]) {
+    if (isExcluded(config, `no${id.charAt(0).toUpperCase() + id.slice(1)}`)) return { metas: [] };
+
+    try {
+      const rawTitles = await festivals[id].fetchTitles();
+      const page = rawTitles.slice(skip, skip + 100);
+      const metas = await resolveTitles(page, type, tmdbKey);
+      console.log(`${festivals[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`);
+      return { metas, cacheMaxAge: 43200, staleRevalidate: 86400, staleError: 604800 };
+    } catch (err) {
+      console.error(`${festivals[id].name} error:`, err.message);
+      return { metas: [] };
+    }
+  }
+
+  // Awards catalogs
+  if (awards[id]) {
+    const excludeKey = `no${id.charAt(0).toUpperCase() + id.slice(1)}`;
+    if (isExcluded(config, excludeKey)) return { metas: [] };
+
+    try {
+      const rawTitles = await awards[id].fetchTitles();
+      const page = rawTitles.slice(skip, skip + 100);
+      const metas = await resolveTitles(page, type, tmdbKey);
+      console.log(`${awards[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`);
+      return { metas, cacheMaxAge: 86400, staleRevalidate: 172800, staleError: 604800 };
+    } catch (err) {
+      console.error(`${awards[id].name} error:`, err.message);
       return { metas: [] };
     }
   }
