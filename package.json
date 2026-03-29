@@ -1,0 +1,18 @@
+{
+  "name": "w2w-stremio",
+  "version": "1.0.0",
+  "description": "Stremio addon aggregating What to Watch recommendations from Decider, Variety, Vulture, RT, and more",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "stremio-addon-sdk": "^1.6.10",
+    "fast-xml-parser": "^4.5.0",
+    "cheerio": "^1.0.0"
+  },
+  "license": "MIT"
+}
