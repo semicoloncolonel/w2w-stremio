@@ -34,4 +34,10 @@ jobs:
           STORAGE_BACKEND: blob
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          # Pull 25 years of festivals / 25 editions of awards. The default
+          # (10) was a leftover from when we ran on Vercel's 60s timeout —
+          # GitHub Actions gives us 30 minutes, so we use it. Older years
+          # (Sundance pre-2003, etc.) that 404 on Wikipedia just yield 0
+          # films and are skipped without failing the run.
+          REFRESH_YEARS_BACK: "25"
         run: node scripts/refresh-cli.js
