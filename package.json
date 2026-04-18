@@ -1,6 +1,6 @@
 {
   "name": "w2w-stremio",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Stremio addon aggregating What to Watch recommendations from Decider, Variety, Vulture, RT, and more",
   "main": "index.js",
   "scripts": {
