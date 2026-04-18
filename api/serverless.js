@@ -1,9 +1,55 @@
 const { getRouter } = require("stremio-addon-sdk");
 const addonInterface = require("../addon");
+const storage = require("../lib/storage");
 const configurePage = require("../lib/configure");
 const refreshHandler = require("./refresh");
 
 const router = getRouter(addonInterface);
+
+// Serve `/manifest.json` (and `/{config}/manifest.json`) directly from the
+// storage blob written by the refresh job. The SDK's addonBuilder bakes the
+// manifest in at construction time, so without this bypass the manifest
+// dropdowns (year, genre options) would only update when the addon process
+// restarts. The catalog handler stays on the SDK builder.
+async function serveManifestFromStorage(req, res, configRaw) {
+  let manifest = null;
+  try {
+    manifest = await storage.getJSON("manifest.json");
+  } catch (err) {
+    console.warn("[serverless] manifest.json read failed:", err.message);
+  }
+  if (!manifest) {
+    // Fall back to the cached/template manifest exposed by addon.js.
+    manifest = addonInterface.getCachedManifest
+      ? addonInterface.getCachedManifest()
+      : addonInterface.manifest;
+  }
+
+  // Mirror the SDK behavior: when a config segment is present, drop the
+  // configurationRequired/configurable hints (the addon is "configured" now).
+  if (configRaw) {
+    const clone = JSON.parse(JSON.stringify(manifest));
+    if (clone.behaviorHints) {
+      delete clone.behaviorHints.configurationRequired;
+      delete clone.behaviorHints.configurable;
+    }
+    manifest = clone;
+  }
+
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.end(JSON.stringify(manifest));
+}
+
+// Match `/manifest.json` or `/{config}/manifest.json`. Returns the config
+// segment (raw, undecoded) when present, "" for plain `/manifest.json`,
+// or null when the path is something else.
+function matchManifestPath(path) {
+  if (path === "/manifest.json") return "";
+  const m = path.match(/^\/([^/]+)\/manifest\.json$/);
+  if (m) return m[1];
+  return null;
+}
 
 module.exports = (req, res) => {
   const path = decodeURIComponent(req.url).split("?")[0].replace(/\/+$/, "") || "/";
@@ -16,26 +62,20 @@ module.exports = (req, res) => {
 
   // Serve custom configure page at root, /configure, and /{config}/configure
   if (path === "/" || path === "/configure" || path.endsWith("/configure")) {
-    const html = configurePage(addonInterface.manifest, req.headers.host);
+    const manifest = addonInterface.getCachedManifest
+      ? addonInterface.getCachedManifest()
+      : addonInterface.manifest;
+    const html = configurePage(manifest, req.headers.host);
     res.setHeader("Content-Type", "text/html");
     res.end(html);
     return;
   }
 
-  // Intercept configured manifest to ensure configurable flag is present
-  if (path.endsWith("/manifest.json") && path !== "/manifest.json") {
-    const originalWrite = res.end.bind(res);
-    res.end = (data) => {
-      try {
-        const manifest = JSON.parse(data);
-        if (!manifest.behaviorHints) manifest.behaviorHints = {};
-        manifest.behaviorHints.configurable = true;
-        manifest.behaviorHints.configurationRequired = false;
-        originalWrite(JSON.stringify(manifest));
-      } catch {
-        originalWrite(data);
-      }
-    };
+  // Serve the dynamic manifest from storage, bypassing the SDK router so the
+  // year/genre dropdown options reflect the latest refresh.
+  const configMatch = matchManifestPath(path);
+  if (configMatch !== null) {
+    return serveManifestFromStorage(req, res, configMatch);
   }
 
   router(req, res, () => {

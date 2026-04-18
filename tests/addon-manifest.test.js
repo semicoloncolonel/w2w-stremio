@@ -14,23 +14,19 @@
 const addon = require("../addon");
 
 const EXPECTED_CATALOG_KEYS = [
+  // Movies
   "w2w/movie",
-  "w2w/series",
-  "now-streaming/movie",
   "sundance/movie",
-  "sundance-all/movie",
   "cannes/movie",
-  "cannes-all/movie",
   "berlinale/movie",
-  "berlinale-all/movie",
+  "venice/movie",
+  "tiff/movie",
   "oscars/movie",
-  "oscars-all/movie",
   "goldenGlobes/movie",
-  "goldenGlobes-all/movie",
+  // Series
+  "w2w/series",
   "goldenGlobes/series",
-  "goldenGlobes-all/series",
   "emmys/series",
-  "emmys-all/series",
 ];
 
 describe("manifest stability", () => {
@@ -40,6 +36,10 @@ describe("manifest stability", () => {
     const actual = manifest.catalogs.map((c) => `${c.id}/${c.type}`).sort();
     const expected = [...EXPECTED_CATALOG_KEYS].sort();
     expect(actual).toEqual(expected);
+  });
+
+  test("has 11 catalog entries total — no extras, no missing", () => {
+    expect(manifest.catalogs).toHaveLength(EXPECTED_CATALOG_KEYS.length);
   });
 
   test("every catalog has a name and a skip extra for pagination", () => {
@@ -52,10 +52,17 @@ describe("manifest stability", () => {
 
   test("does not require configuration (no user TMDB key)", () => {
     expect(manifest.behaviorHints.configurationRequired).toBe(false);
+    expect(manifest.behaviorHints.configurable).toBe(true);
     expect(manifest.config.some((c) => c.key === "tmdbKey")).toBe(false);
   });
 
-  test("version is semver major.minor.patch", () => {
-    expect(manifest.version).toMatch(/^\d+\.\d+\.\d+$/);
+  test("version is exactly 3.0.0 (breaking schema change)", () => {
+    expect(manifest.version).toBe("3.0.0");
+  });
+
+  test("preserves required core fields", () => {
+    expect(manifest.idPrefixes).toEqual(["tt"]);
+    expect(manifest.resources).toEqual(["catalog"]);
+    expect(manifest.types).toEqual(expect.arrayContaining(["movie", "series"]));
   });
 });
