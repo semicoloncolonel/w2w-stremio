@@ -1,11 +1,18 @@
 const { getRouter } = require("stremio-addon-sdk");
 const addonInterface = require("../addon");
 const configurePage = require("../lib/configure");
+const refreshHandler = require("./refresh");
 
 const router = getRouter(addonInterface);
 
 module.exports = (req, res) => {
   const path = decodeURIComponent(req.url).split("?")[0].replace(/\/+$/, "") || "/";
+
+  // Vercel Cron + manual refresh trigger. Must come before any other routing
+  // so the cron platform's POST/GET to /api/refresh always reaches the job.
+  if (path === "/api/refresh" || path.startsWith("/api/refresh/")) {
+    return refreshHandler(req, res);
+  }
 
   // Serve custom configure page at root, /configure, and /{config}/configure
   if (path === "/" || path === "/configure" || path.endsWith("/configure")) {
