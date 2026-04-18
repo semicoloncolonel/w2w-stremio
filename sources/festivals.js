@@ -17,9 +17,15 @@ const FESTIVALS = {
   venice: { name: "Venice", configKey: "venice" },
 };
 
-// Walk every `table.wikitable` in the article body and pull the italic title
-// from each row's first cell. Skips obvious header strings ("English title",
-// "Original title") that some festival pages italicise.
+// Pull film titles from a per-edition Wikipedia page. Two complementary
+// passes — modern festival pages (~2024+) lay films out in `table.wikitable`
+// rows, but older pages (Sundance 2016-2023, etc.) use bullet lists under
+// section headings, with each film as `<li><i><a>Title</a></i></li>`.
+// We collect from both paths and dedupe at the call site.
+//
+// The `<ol class="references">` filter on the list pass is important: footnote
+// references italicise publication names ("Variety", "Deadline Hollywood")
+// which would otherwise be picked up as fake films.
 async function fetchWikipediaFilms(url) {
   const html = await fetchPage(url);
   const $ = loadCheerio(html);
@@ -45,6 +51,23 @@ async function fetchWikipediaFilms(url) {
           link,
         });
       });
+  });
+
+  $("#mw-content-text li i a").each((_, a) => {
+    const $a = $(a);
+    if ($a.parents("ol.references").length > 0) return;
+    if ($a.parents("table.wikitable").length > 0) return;
+    const title = $a.text().trim();
+    if (!title) return;
+    const href = $a.attr("href") || "";
+    const link = href ? `https://en.wikipedia.org${href}` : "";
+    films.push({
+      title,
+      year: undefined,
+      type: "movie",
+      source: "",
+      link,
+    });
   });
 
   return films;

@@ -155,6 +155,49 @@ describe("venice.fetchTitlesForYear (real Wikipedia fixture)", () => {
   });
 });
 
+describe("list-fallback for older festival pages", () => {
+  // Pre-2024 Sundance pages don't use wikitables — films are bulleted
+  // <li><i><a>Title</a></i></li> under section headings. Verify the
+  // fallback path picks them up while still filtering out italicised
+  // publication names that live inside <ol class="references">.
+  test("collects <li><i><a>...</a></i></li> film entries when no wikitable is present", async () => {
+    const html = `<html><body><div id="mw-content-text">
+      <h2 id="Films">Films</h2>
+      <ul>
+        <li><i><a href="/wiki/Old_Film_A">Old Film A</a></i></li>
+        <li><i><a href="/wiki/Old_Film_B">Old Film B</a></i></li>
+      </ul>
+      <h2 id="References">References</h2>
+      <ol class="references">
+        <li><cite><i><a href="/wiki/Variety">Variety</a></i></cite></li>
+        <li><cite><i><a href="/wiki/Deadline">Deadline Hollywood</a></i></cite></li>
+      </ol>
+    </div></body></html>`;
+    fetchPage.mockResolvedValueOnce(html);
+
+    const titles = await sundance.fetchTitlesForYear(2018);
+
+    const names = titles.map((t) => t.title);
+    expect(names).toEqual(["Old Film A", "Old Film B"]);
+    // Publication italics inside ol.references must be filtered out.
+    expect(names).not.toContain("Variety");
+    expect(names).not.toContain("Deadline Hollywood");
+  });
+
+  test("dedupes entries that appear in both the wikitable and the bullet-list passes", async () => {
+    const html = `<html><body><div id="mw-content-text">
+      <table class="wikitable"><tbody>
+        <tr><td><i><a href="/wiki/Shared_Title">Shared Title</a></i></td></tr>
+      </tbody></table>
+      <ul><li><i><a href="/wiki/Shared_Title">Shared Title</a></i></li></ul>
+    </div></body></html>`;
+    fetchPage.mockResolvedValueOnce(html);
+
+    const titles = await tiff.fetchTitlesForYear(2024);
+    expect(titles.map((t) => t.title)).toEqual(["Shared Title"]);
+  });
+});
+
 describe("error handling", () => {
   test("returns [] when the Wikipedia fetch fails", async () => {
     fetchPage.mockRejectedValueOnce(new Error("Fetch failed: 404"));
