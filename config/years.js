@@ -75,4 +75,29 @@ module.exports = {
     currentYear: 2026,
     letterboxdUrl: (y) => `https://letterboxd.com/berlinale_ifb/list/berlinale-programme-${y}/`,
   },
+
+  venice: {
+    // Venice International Film Festival uses post-war (1943-based) edition
+    // numbering. 81st edition = 2024, 82nd = 2025. See `editionForYear`.
+    // No official Letterboxd account exists; community lists are incomplete
+    // (the `neperfectionist` list set is missing 2020 etc.) so we use the
+    // per-edition Wikipedia page, which has reliable coverage back further
+    // and yields more films per year (e.g. 244 vs 174 for 2024). Year of
+    // each film is not present on Wikipedia tables — only the festival year
+    // is captured (in the source label).
+    currentYear: 2025,
+    currentEdition: 82,
+    editionForYear: (y) => y - 1943,
+    wikipediaUrl: (y) =>
+      `https://en.wikipedia.org/wiki/${ordinal(y - 1943)}_Venice_International_Film_Festival`,
+  },
+
+  tiff: {
+    // Toronto International Film Festival. The official `tiff_net` account
+    // maintains a per-year Letterboxd list with comprehensive coverage
+    // (~258 films for 2024). Reuses the existing Letterboxd scraper.
+    currentYear: 2025,
+    letterboxdUrl: (y) =>
+      `https://letterboxd.com/tiff_net/list/${y}-toronto-international-film-festival/`,
+  },
 };

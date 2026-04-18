@@ -1,0 +1,66 @@
+<!doctype html><html><body>
+<!-- Minimal Wikipedia per-edition fixture. The scraper walks every
+     `table.wikitable` under `#mw-content-text` and pulls the italicized
+     title from the first cell of each non-header row. -->
+<div id="mw-content-text">
+  <h2>Official selection</h2>
+  <h3>In competition</h3>
+  <table class="wikitable sortable">
+    <thead>
+      <tr>
+        <th>English title</th>
+        <th>Original title</th>
+        <th>Director(s)</th>
+        <th>Production country</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><i><a href="/wiki/The_Brutalist">The Brutalist</a></i></td>
+        <td>&#8212;</td>
+        <td>Brady Corbet</td>
+        <td>United States</td>
+      </tr>
+      <tr>
+        <td><i><a href="/wiki/Babygirl_(film)">Babygirl</a></i></td>
+        <td>&#8212;</td>
+        <td>Halina Reijn</td>
+        <td>United States</td>
+      </tr>
+      <tr>
+        <td><i><a href="/wiki/Joker:_Folie_%C3%A0_Deux">Joker: Folie &agrave; Deux</a></i></td>
+        <td>&#8212;</td>
+        <td>Todd Phillips</td>
+        <td>United States</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>Out of competition</h3>
+  <table class="wikitable">
+    <tbody>
+      <tr>
+        <th>English title</th>
+        <th>Director(s)</th>
+      </tr>
+      <tr>
+        <td><i>Wolfs</i></td>
+        <td>Jon Watts</td>
+      </tr>
+      <!-- Duplicate of in-competition entry to exercise dedupe -->
+      <tr>
+        <td><i><a href="/wiki/The_Brutalist">The Brutalist</a></i></td>
+        <td>Brady Corbet</td>
+      </tr>
+      <!-- Empty italic - should be skipped -->
+      <tr>
+        <td><i></i></td>
+        <td>(empty)</td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- Non-wikitable shouldn't be scraped -->
+  <table class="infobox">
+    <tr><td><i>Should Not Appear</i></td></tr>
+  </table>
+</div>
+</body></html>
