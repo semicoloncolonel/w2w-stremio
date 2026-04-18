@@ -64,12 +64,7 @@ function tablesUnderSection($, headingEl) {
   const tables = [];
   let cur = wrapper.next();
   while (cur.length) {
-    if (
-      cur.is("div.mw-heading2") ||
-      cur.is("div.mw-heading3") ||
-      cur.is("h2") ||
-      cur.is("h3")
-    ) {
+    if (cur.is("div.mw-heading2") || cur.is("div.mw-heading3") || cur.is("h2") || cur.is("h3")) {
       break;
     }
     if (cur.is("table.wikitable") && !isAggregationTable($, cur[0])) {
@@ -357,9 +352,7 @@ async function goldenGlobesFetchTitlesForEdition(n) {
   }));
 
   const distinctTitles = new Set(out.map((r) => r.title.toLowerCase())).size;
-  console.log(
-    `${sourceLabel}: ${out.length} nominations across ${distinctTitles} titles`
-  );
+  console.log(`${sourceLabel}: ${out.length} nominations across ${distinctTitles} titles`);
   return out;
 }
 
@@ -403,9 +396,7 @@ async function emmysFetchTitlesForEdition(n) {
   }));
 
   const distinctTitles = new Set(out.map((r) => r.title.toLowerCase())).size;
-  console.log(
-    `${sourceLabel}: ${out.length} nominations across ${distinctTitles} shows`
-  );
+  console.log(`${sourceLabel}: ${out.length} nominations across ${distinctTitles} shows`);
   return out;
 }
 

@@ -90,9 +90,7 @@ describe("oscars.fetchTitlesForEdition (Letterboxd /detail/ scraper)", () => {
     // The raw notes text reads "Best Actor in a Leading Role, Cillian Murphy".
     // We collapse all acting nominations under the canonical category label
     // so the genre dropdown surfaces one entry, not one-per-actor.
-    const oppCats = rows
-      .filter((r) => r.title === "Oppenheimer")
-      .map((r) => r.category);
+    const oppCats = rows.filter((r) => r.title === "Oppenheimer").map((r) => r.category);
     expect(oppCats).toContain("Best Actor in a Leading Role");
     expect(oppCats).toContain("Best Actor in a Supporting Role");
     for (const c of oppCats) {
@@ -112,7 +110,9 @@ describe("oscars.fetchTitlesForEdition (Letterboxd /detail/ scraper)", () => {
     const titles = bestPicture.map((r) => r.title);
     // Anatomy of a Fall, Oppenheimer, and Past Lives all show up in the
     // fixture's Best Picture nominations.
-    expect(titles).toEqual(expect.arrayContaining(["Oppenheimer", "Anatomy of a Fall", "Past Lives"]));
+    expect(titles).toEqual(
+      expect.arrayContaining(["Oppenheimer", "Anatomy of a Fall", "Past Lives"])
+    );
     // No deduping at scraper level — we want the raw cross-product.
     expect(new Set(titles).size).toBe(titles.length);
   });

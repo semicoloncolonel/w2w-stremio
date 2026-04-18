@@ -164,7 +164,9 @@ describe("goldenGlobes.fetchTitlesForEdition (70th, pre-2017 layout)", () => {
 
     const animated = rows.filter((r) => r.category === "Best Animated Feature Film");
     const titles = animated.map((r) => r.title);
-    expect(titles).toEqual(expect.arrayContaining(["Brave", "Frankenweenie", "Hotel Transylvania"]));
+    expect(titles).toEqual(
+      expect.arrayContaining(["Brave", "Frankenweenie", "Hotel Transylvania"])
+    );
   });
 
   test("Cecil B. DeMille honorary section is skipped in old layout too", async () => {

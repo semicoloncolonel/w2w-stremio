@@ -85,9 +85,7 @@ describe("emmys.fetchTitlesForEdition (77th, modern layout)", () => {
 
     const rows = await emmys.fetchTitlesForEdition(77);
 
-    const lead = rows.filter(
-      (r) => r.category === "Outstanding Lead Actor in a Comedy Series"
-    );
+    const lead = rows.filter((r) => r.category === "Outstanding Lead Actor in a Comedy Series");
     expect(lead.length).toBeGreaterThan(0);
     // Performer names ("Pedro Pascal", "Sterling K. Brown") would never start
     // with words like "Outstanding" or have mid-sentence capitalisation typical

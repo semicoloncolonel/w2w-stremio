@@ -3,3 +3,7 @@ package-lock.json
 .vercel
 .cache
 coverage
+
+# HTML fixtures are scraped-as-is; reformatting whitespace would change
+# how the scraper tests see the DOM and invalidate assertions.
+tests/fixtures/**/*.html
