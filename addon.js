@@ -162,7 +162,18 @@ function filterAndPaginate(data, extra, id) {
 builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
   if (isExcludedForCatalog(config, id, type)) return { metas: [] };
 
-  const data = await storage.getJSON(`catalog/${id}/${type}.json`);
+  // Storage read can throw when the blob backend is misconfigured
+  // (missing/invalid BLOB_READ_WRITE_TOKEN, network blip, etc). The SDK turns
+  // thrown handler errors into HTTP 500, which Stremio surfaces as a catalog
+  // load failure. Treat read errors as "no data yet" so the client gets an
+  // empty shelf instead of a hard error, and log so operators can see why.
+  let data;
+  try {
+    data = await storage.getJSON(`catalog/${id}/${type}.json`);
+  } catch (err) {
+    console.warn(`[addon] storage read failed for ${id}/${type}:`, err.message);
+    return { metas: [] };
+  }
   if (!data || !Array.isArray(data.items)) return { metas: [] };
 
   const items = filterAndPaginate(data, extra || {}, id);
