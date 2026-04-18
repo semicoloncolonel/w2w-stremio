@@ -11,7 +11,9 @@ const FESTIVAL_LISTS = {
   },
   cannes: {
     name: "Cannes",
-    urls: ["https://letterboxd.com/festival_cannes/list/festival-de-cannes-official-selection-2025/"],
+    urls: [
+      "https://letterboxd.com/festival_cannes/list/festival-de-cannes-official-selection-2025/",
+    ],
   },
   berlinale: {
     name: "Berlinale",

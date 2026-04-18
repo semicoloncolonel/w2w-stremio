@@ -190,7 +190,9 @@ builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
       const rawTitles = await festivals[id].fetchTitles();
       const page = rawTitles.slice(skip, skip + 100);
       const metas = await resolveTitles(page, type, tmdbKey);
-      console.log(`${festivals[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`);
+      console.log(
+        `${festivals[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`
+      );
       return { metas, cacheMaxAge: 43200, staleRevalidate: 86400, staleError: 604800 };
     } catch (err) {
       console.error(`${festivals[id].name} error:`, err.message);
@@ -207,7 +209,9 @@ builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
       const rawTitles = await awards[id].fetchTitles();
       const page = rawTitles.slice(skip, skip + 100);
       const metas = await resolveTitles(page, type, tmdbKey);
-      console.log(`${awards[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`);
+      console.log(
+        `${awards[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`
+      );
       return { metas, cacheMaxAge: 86400, staleRevalidate: 172800, staleError: 604800 };
     } catch (err) {
       console.error(`${awards[id].name} error:`, err.message);

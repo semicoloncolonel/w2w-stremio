@@ -10,10 +10,23 @@ const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 // Strings that are definitely not show/movie titles
 const NOISE = new Set([
-  "most popular", "you may also like", "related", "advertisement",
-  "netflix", "hulu", "amazon prime", "disney plus", "apple tv+",
-  "max", "peacock", "paramount+", "criterion channel", "mubi",
-  "ifc films unlimited", "the criterion channel", "prime video",
+  "most popular",
+  "you may also like",
+  "related",
+  "advertisement",
+  "netflix",
+  "hulu",
+  "amazon prime",
+  "disney plus",
+  "apple tv+",
+  "max",
+  "peacock",
+  "paramount+",
+  "criterion channel",
+  "mubi",
+  "ifc films unlimited",
+  "the criterion channel",
+  "prime video",
 ]);
 
 function cleanTitle(text) {

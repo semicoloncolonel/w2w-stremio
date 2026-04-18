@@ -21,30 +21,31 @@ async function fetchTitles() {
     const html = await fetchPage(SPOTLIGHT_URL);
     const $ = loadCheerio(html);
 
-    $(".css-1j88qqx, .css-bko25c a, .css-1x50auk a, .css-j9v18q a, h3 a").each(
-      (_, el) => {
-        const headline = $(el).text().trim();
-        if (!headline) return;
+    $(".css-1j88qqx, .css-bko25c a, .css-1x50auk a, .css-j9v18q a, h3 a").each((_, el) => {
+      const headline = $(el).text().trim();
+      if (!headline) return;
 
-        const match = headline.match(WEEKLY_COLUMN);
-        if (!match) return;
+      const match = headline.match(WEEKLY_COLUMN);
+      if (!match) return;
 
-        let title = match[1].trim().replace(/[,:]\s*$/, "").trim();
-        if (title.length < 2) return;
+      let title = match[1]
+        .trim()
+        .replace(/[,:]\s*$/, "")
+        .trim();
+      if (title.length < 2) return;
 
-        const key = title.toLowerCase();
-        if (seen.has(key)) return;
-        seen.add(key);
+      const key = title.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
 
-        titles.push({
-          title,
-          year: undefined,
-          type: undefined,
-          source: "NYT",
-          link: "",
-        });
-      }
-    );
+      titles.push({
+        title,
+        year: undefined,
+        type: undefined,
+        source: "NYT",
+        link: "",
+      });
+    });
   } catch (err) {
     console.error("NYT spotlight error:", err.message);
   }

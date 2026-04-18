@@ -55,10 +55,10 @@ The addon starts at `http://localhost:7500`. Open `http://localhost:7500/configu
 
 ## Configuration
 
-| Setting | Required | Description |
-|---|---|---|
-| TMDB API Key | Yes | Used to resolve titles to IMDb IDs and fetch posters |
-| Exclude checkboxes | No | Opt out of any source you don't want |
+| Setting            | Required | Description                                          |
+| ------------------ | -------- | ---------------------------------------------------- |
+| TMDB API Key       | Yes      | Used to resolve titles to IMDb IDs and fetch posters |
+| Exclude checkboxes | No       | Opt out of any source you don't want                 |
 
 ## Deployment
 

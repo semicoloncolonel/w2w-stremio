@@ -7,16 +7,12 @@ const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days — nominees don't change
 const AWARDS_LISTS = {
   oscars: {
     name: "Oscar Nominees",
-    urls: [
-      "https://letterboxd.com/oscars/list/the-98th-academy-award-nominees-all-feature/",
-    ],
+    urls: ["https://letterboxd.com/oscars/list/the-98th-academy-award-nominees-all-feature/"],
     type: "movie",
   },
   goldenGlobes: {
     name: "Golden Globe Nominees",
-    urls: [
-      "https://letterboxd.com/filmfestival/list/2026-golden-globes-nominations/",
-    ],
+    urls: ["https://letterboxd.com/filmfestival/list/2026-golden-globes-nominations/"],
     type: "movie",
   },
 };
