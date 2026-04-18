@@ -43,9 +43,9 @@ The dropdown options shown in Stremio are populated dynamically from the actuall
 2. It scrapes each source, resolves titles to IMDb metas via a **server-owned** TMDB key, and writes pre-built catalog JSON to persistent storage. It also writes a top-level `manifest.json` blob containing the full Stremio manifest with `extra.options` populated from the scraped years/categories so the in-app dropdowns reflect what's actually available.
 3. The addon's catalog handler becomes a cheap storage read — no scraping or TMDB traffic on the hot path. The `/manifest.json` route reads the storage blob directly so dropdown options stay fresh between deploys.
 
-## Version 3.0.0 — breaking schema change
+## Schema change in 1.1.0
 
-The 3.0.0 release drops the `now-streaming` and `*-all` catalog variants in favor of single catalogs that span the historical window via the new `year` filter. Existing installs continue to work for the catalogs that survived the rename (`oscars`, `goldenGlobes`, `emmys`, `sundance`, `cannes`, `berlinale`, `w2w`); Stremio refetches the manifest periodically and the new catalogs and dropdowns will appear automatically. Users who want the year/genre dropdowns to populate with options on first sight may need to re-install (since Stremio caches `extra.options` aggressively per install).
+The 1.1.0 release drops the `now-streaming` and `*-all` catalog variants in favor of single catalogs that span the historical window via the new `year` filter. Existing installs continue to work for the catalogs that survived the rename (`oscars`, `goldenGlobes`, `emmys`, `sundance`, `cannes`, `berlinale`, `w2w`); Stremio refetches the manifest periodically and the new catalogs and dropdowns will appear automatically. Users who want the year/genre dropdowns to populate with options on first sight may need to re-install (since Stremio caches `extra.options` aggressively per install).
 
 ## Requirements
 
@@ -106,7 +106,7 @@ The addon's manifest URL and surviving catalog ids are treated as a stable contr
 
 - New features land behind new optional config fields when possible.
 - The manifest URL never changes. If we move domains, we keep the old URL serving too.
-- Breaking changes (such as the 3.0.0 cleanup of `now-streaming` and `*-all` variants) are intentional and bump the major version.
+- Breaking changes (such as the 1.1.0 cleanup of `now-streaming` and `*-all` variants) are intentional and bump the minor version.
 
 ## License
 
