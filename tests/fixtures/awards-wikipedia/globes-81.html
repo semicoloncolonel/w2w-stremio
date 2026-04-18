@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+  Trimmed fixture mirroring the 81st Golden Globe Awards page layout
+  (https://en.wikipedia.org/wiki/81st_Golden_Globe_Awards).
+
+  Key shape choices preserved from the real page:
+    * Each section heading lives inside <div class="mw-heading mw-heading3">.
+      The scraper anchors on the <h3 id="..."> child and walks siblings of
+      that wrapper div until the next mw-heading2/mw-heading3.
+    * Modern (post-~2017) tables encode each category as one <td> cell:
+      <div><b><a>Category</a></b></div> followed by <ul><li><i>...</i></ul>.
+    * Acting cells include the nominee's name in plain text and the
+      film/series in <i>; we only want the italic.
+    * "Films with multiple nominations/wins" tables sit between Film and
+      Television (and after Television) — they have <th>Nominations</th> /
+      <th>Wins</th> headers and are skipped.
+    * Cecil B. DeMille Award is intentionally added under Film to verify the
+      non-competitive skiplist. Carol Burnett Award added under Television.
+-->
+<html><head><title>81st Golden Globe Awards</title></head><body>
+<div class="mw-heading mw-heading2"><h2 id="Winners_and_nominees">Winners and nominees</h2></div>
+
+<div class="mw-heading mw-heading3"><h3 id="Film">Film</h3></div>
+
+<table class="wikitable"><tbody>
+<tr>
+  <td valign="top">
+    <div><b><a href="/wiki/x">Best Motion Picture &#8211; Drama</a></b></div>
+    <ul><li><i><b><a href="/wiki/Oppenheimer_(film)">Oppenheimer</a></b></i>
+      <ul>
+        <li><i><a href="/wiki/Anatomy_of_a_Fall">Anatomy of a Fall</a></i></li>
+        <li><i><a href="/wiki/Killers_of_the_Flower_Moon_(film)">Killers of the Flower Moon</a></i></li>
+        <li><i><a href="/wiki/Past_Lives_(film)">Past Lives</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <div><b><a href="/wiki/y">Best Motion Picture &#8211; Musical or Comedy</a></b></div>
+    <ul><li><i><b><a href="/wiki/Poor_Things_(film)">Poor Things</a></b></i>
+      <ul>
+        <li><i><a href="/wiki/Barbie_(film)">Barbie</a></i></li>
+        <li><i><a href="/wiki/The_Holdovers">The Holdovers</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr>
+  <td valign="top">
+    <div><b><a href="/wiki/z">Best Actor in a Motion Picture &#8211; Drama</a></b></div>
+    <ul><li><b><a href="/wiki/Cillian_Murphy">Cillian Murphy</a> &#8211; <i><a href="/wiki/Oppenheimer_(film)">Oppenheimer</a></i></b>
+      <ul>
+        <li><a href="/wiki/Bradley_Cooper">Bradley Cooper</a> &#8211; <i><a href="/wiki/Maestro_(2023_film)">Maestro</a></i></li>
+        <li><a href="/wiki/Leonardo_DiCaprio">Leonardo DiCaprio</a> &#8211; <i><a href="/wiki/Killers_of_the_Flower_Moon_(film)">Killers of the Flower Moon</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <div><b><a href="/wiki/zz">Cecil B. DeMille Award</a></b></div>
+    <ul><li><b><a href="/wiki/Eddie_Murphy">Eddie Murphy</a></b></li></ul>
+  </td>
+</tr>
+</tbody></table>
+
+<p>The following films received multiple nominations:</p>
+<table class="wikitable"><tbody>
+<tr><th>Nominations</th><th>Films</th></tr>
+<tr><td>9</td><td>Barbie</td></tr>
+<tr><td>8</td><td>Oppenheimer</td></tr>
+</tbody></table>
+
+<div class="mw-heading mw-heading3"><h3 id="Television">Television</h3></div>
+
+<table class="wikitable"><tbody>
+<tr>
+  <td valign="top">
+    <div><b><a href="/wiki/x">Best Television Series &#8211; Drama</a></b></div>
+    <ul><li><b><i><a href="/wiki/Succession_(TV_series)">Succession</a></i> (HBO)</b>
+      <ul>
+        <li><i><a href="/wiki/The_Crown_(TV_series)">The Crown</a></i> (Netflix)</li>
+        <li><i><a href="/wiki/The_Morning_Show_(American_TV_series)">The Morning Show</a></i> (Apple TV+)</li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <div><b><a href="/wiki/y">Best Television Series &#8211; Musical or Comedy</a></b></div>
+    <ul><li><b><i><a href="/wiki/The_Bear_(TV_series)">The Bear</a></i> (FX / Hulu)</b>
+      <ul>
+        <li><i><a href="/wiki/Abbott_Elementary">Abbott Elementary</a></i> (ABC)</li>
+        <li><i><a href="/wiki/Only_Murders_in_the_Building">Only Murders in the Building</a></i> (Hulu)</li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr>
+  <td valign="top">
+    <div><b><a href="/wiki/z">Best Actor in a Television Series &#8211; Drama</a></b></div>
+    <ul><li><b><a href="/wiki/Kieran_Culkin">Kieran Culkin</a> &#8211; <i><a href="/wiki/Succession_(TV_series)">Succession</a></i></b>
+      <ul>
+        <li><a href="/wiki/Brian_Cox">Brian Cox</a> &#8211; <i><a href="/wiki/Succession_(TV_series)">Succession</a></i></li>
+        <li><a href="/wiki/Jeremy_Strong">Jeremy Strong</a> &#8211; <i><a href="/wiki/Succession_(TV_series)">Succession</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <div><b><a href="/wiki/zz">Carol Burnett Award</a></b></div>
+    <ul><li><b><a href="/wiki/Carol_Burnett">Carol Burnett</a></b></li></ul>
+  </td>
+</tr>
+</tbody></table>
+
+<p>The following series received multiple nominations:</p>
+<table class="wikitable"><tbody>
+<tr><th>Nominations</th><th>Series</th></tr>
+<tr><td>5</td><td>Succession</td></tr>
+</tbody></table>
+
+<div class="mw-heading mw-heading2"><h2 id="Presenters">Presenters</h2></div>
+<p>Some presenter content here that should be ignored.</p>
+
+</body></html>

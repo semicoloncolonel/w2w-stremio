@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+  Trimmed fixture for the 70th Golden Globe Awards layout
+  (https://en.wikipedia.org/wiki/70th_Golden_Globe_Awards).
+
+  Older Globes pages do NOT use the per-cell <div><b><a> category header
+  pattern. Instead each table interleaves rows of:
+    <tr><th colspan="2">Parent Category</th></tr>
+    <tr><th>SubA</th><th>SubB</th></tr>     (optional sub-split row)
+    <tr><td>list of films</td><td>list</td></tr>
+  When the second header row is present we synthesize the category as
+  "Parent Category – SubA". When absent (e.g. "Best Animated Feature Film")
+  we fall back to the parent label.
+
+  Also covers an acting category whose winner line is "Person – <i>Title</i>"
+  to verify we extract the italic film/series.
+-->
+<html><head><title>70th Golden Globe Awards</title></head><body>
+
+<div class="mw-heading mw-heading2"><h2 id="Winners_and_nominees">Winners and nominees</h2></div>
+<div class="mw-heading mw-heading3"><h3 id="Film">Film</h3></div>
+
+<table class="wikitable"><tbody>
+<tr><th colspan="2">Best Motion Picture</th></tr>
+<tr>
+  <th><a href="/wiki/x">Drama</a></th>
+  <th><a href="/wiki/y">Musical or Comedy</a></th>
+</tr>
+<tr>
+  <td valign="top">
+    <ul><li><i><b><a href="/wiki/Argo_(2012_film)">Argo</a></b></i>
+      <ul>
+        <li><i><a href="/wiki/Django_Unchained">Django Unchained</a></i></li>
+        <li><i><a href="/wiki/Lincoln_(film)">Lincoln</a></i></li>
+        <li><i><a href="/wiki/Zero_Dark_Thirty">Zero Dark Thirty</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <ul><li><i><b><a href="/wiki/Les_Mis%C3%A9rables_(2012_film)">Les Misérables</a></b></i>
+      <ul>
+        <li><i><a href="/wiki/Moonrise_Kingdom">Moonrise Kingdom</a></i></li>
+        <li><i><a href="/wiki/Silver_Linings_Playbook">Silver Linings Playbook</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr><th colspan="2">Best Performance in a Motion Picture &#8211; Drama</th></tr>
+<tr>
+  <th><a href="/wiki/z">Actor</a></th>
+  <th><a href="/wiki/zz">Actress</a></th>
+</tr>
+<tr>
+  <td valign="top">
+    <ul><li><b><a href="/wiki/Daniel_Day-Lewis">Daniel Day-Lewis</a> &#8211; <i><a href="/wiki/Lincoln_(film)">Lincoln</a></i> as Abraham Lincoln</b>
+      <ul>
+        <li><a href="/wiki/Joaquin_Phoenix">Joaquin Phoenix</a> &#8211; <i><a href="/wiki/The_Master_(2012_film)">The Master</a></i> as Freddie</li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <ul><li><b><a href="/wiki/Jessica_Chastain">Jessica Chastain</a> &#8211; <i><a href="/wiki/Zero_Dark_Thirty">Zero Dark Thirty</a></i> as Maya</b>
+      <ul>
+        <li><a href="/wiki/Naomi_Watts">Naomi Watts</a> &#8211; <i><a href="/wiki/The_Impossible_(2012_film)">The Impossible</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr><th colspan="2">Best Animated Feature Film</th></tr>
+<tr>
+  <td colspan="2" valign="top">
+    <ul><li><i><b><a href="/wiki/Brave_(2012_film)">Brave</a></b></i>
+      <ul>
+        <li><i><a href="/wiki/Frankenweenie_(2012_film)">Frankenweenie</a></i></li>
+        <li><i><a href="/wiki/Hotel_Transylvania">Hotel Transylvania</a></i></li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr><th colspan="2">Cecil B. DeMille Award</th></tr>
+<tr>
+  <td colspan="2" valign="top">
+    <ul><li><b><a href="/wiki/Jodie_Foster">Jodie Foster</a></b></li></ul>
+  </td>
+</tr>
+</tbody></table>
+
+<p>The following 12 films received multiple nominations:</p>
+<table class="wikitable"><tbody>
+<tr><th>Nominations</th><th>Film</th></tr>
+<tr><td>7</td><td>Lincoln</td></tr>
+</tbody></table>
+
+<div class="mw-heading mw-heading3"><h3 id="Television">Television</h3></div>
+
+<table class="wikitable"><tbody>
+<tr><th colspan="2">Best Series</th></tr>
+<tr>
+  <th><a href="/wiki/x">Drama</a></th>
+  <th><a href="/wiki/y">Musical or Comedy</a></th>
+</tr>
+<tr>
+  <td valign="top">
+    <ul><li><b><i><a href="/wiki/Homeland_(TV_series)">Homeland</a></i> (Showtime)</b>
+      <ul>
+        <li><i><a href="/wiki/Breaking_Bad">Breaking Bad</a></i> (AMC)</li>
+        <li><i><a href="/wiki/Downton_Abbey">Downton Abbey</a></i> (PBS)</li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <ul><li><b><i><a href="/wiki/Girls_(TV_series)">Girls</a></i> (HBO)</b>
+      <ul>
+        <li><i><a href="/wiki/The_Big_Bang_Theory">The Big Bang Theory</a></i> (CBS)</li>
+        <li><i><a href="/wiki/Modern_Family">Modern Family</a></i> (ABC)</li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+<tr><th colspan="2">Best Performance in a Television Series &#8211; Drama</th></tr>
+<tr>
+  <th>Actor</th>
+  <th>Actress</th>
+</tr>
+<tr>
+  <td valign="top">
+    <ul><li><b><a href="/wiki/Damian_Lewis">Damian Lewis</a> &#8211; <i><a href="/wiki/Homeland_(TV_series)">Homeland</a></i> (Showtime)</b>
+      <ul>
+        <li><a href="/wiki/Bryan_Cranston">Bryan Cranston</a> &#8211; <i><a href="/wiki/Breaking_Bad">Breaking Bad</a></i> (AMC)</li>
+      </ul>
+    </li></ul>
+  </td>
+  <td valign="top">
+    <ul><li><b><a href="/wiki/Claire_Danes">Claire Danes</a> &#8211; <i><a href="/wiki/Homeland_(TV_series)">Homeland</a></i> (Showtime)</b>
+      <ul>
+        <li><a href="/wiki/Glenn_Close">Glenn Close</a> &#8211; <i><a href="/wiki/Damages_(TV_series)">Damages</a></i> (FX)</li>
+      </ul>
+    </li></ul>
+  </td>
+</tr>
+</tbody></table>
+
+</body></html>
