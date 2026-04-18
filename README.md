@@ -1,68 +1,105 @@
 # What to Watch — Stremio Addon
 
-A Stremio catalog addon that aggregates editorial "What to Watch" recommendations from multiple reputable TV and movie news sources into browsable catalogs.
+A Stremio catalog addon that aggregates editorial picks, festival lineups, and award nominees into browsable catalogs. Data is refreshed every 6 hours server-side — **users don't need a TMDB key**.
 
 ## Catalogs
 
-- **What to Watch** — Curated editorial picks merged from all sources (movies and series)
-- **Now Streaming** — Recently added movies to streaming platforms via Rotten Tomatoes
+**Current**
 
-## Sources
+- **What to Watch** — editorial picks merged from Decider, Variety, Vulture, IndieWire, and the NYT (movies and series)
+- **Now Streaming** — newly added movies on streaming platforms (Rotten Tomatoes)
+- **Sundance / Cannes / Berlinale** — current-year festival lineups
+- **Oscar / Golden Globe / Emmy Nominees** — latest-edition nominees
 
-- **Decider** — Stream It or Skip It reviews and recommendations
-- **Variety** — What to Watch streaming picks
-- **Vulture** — Weekly watch recommendations scraped from their weekend guides
-- **IndieWire** — Best new TV shows
-- **New York Times** — Weekly "What to Watch" column picks (no API key needed)
+**Historical (`-all` variants)**
 
-All sources are enabled by default. You can exclude any source from the configure page.
+- **Sundance / Cannes / Berlinale — All Years** — last 10 years of festival lineups, merged + deduped
+- **Oscar / Golden Globe / Emmy Nominees — All Editions** — last 10 editions of nominees
+
+All catalogs are enabled by default; the configure page lets users opt out of any of them.
+
+## How it works
+
+```
+ ┌─────────────────┐     Vercel Cron (every 6h)     ┌──────────────────┐
+ │  /api/refresh   │ ◄─────────────────────────────│  Scheduled HTTP  │
+ └────────┬────────┘                                └──────────────────┘
+          │  scrape sources → resolve via TMDB
+          ▼
+ ┌─────────────────┐                                ┌──────────────────┐
+ │  Vercel Blob    │ ◄──────────────────────────────│  lib/storage.js  │
+ │  catalog/*.json │                                └──────────────────┘
+ └────────┬────────┘
+          │  fast read on every request
+          ▼
+ ┌─────────────────┐     Stremio client             ┌──────────────────┐
+ │ catalog handler │ ──────────────────────────────►│  user's Stremio  │
+ └─────────────────┘                                └──────────────────┘
+```
+
+1. **Refresh job** (`lib/refresh.js`, triggered by Vercel Cron at `/api/refresh`) runs every 6 hours.
+2. It scrapes each source, resolves titles to IMDb metas via a **server-owned** TMDB key, and writes pre-built catalog JSON to persistent storage.
+3. The addon's catalog handler becomes a cheap storage read — no scraping or TMDB traffic on the hot path.
 
 ## Requirements
 
 - Node.js 20+
-- TMDB API key (free at [themoviedb.org](https://www.themoviedb.org/settings/api))
+- **Server-only**: a TMDB API key (free at [themoviedb.org](https://www.themoviedb.org/settings/api)), plus either Vercel Blob or a writable filesystem for storage.
 
-## Environment Variables
+## Environment variables
 
-Copy `.env.example` to `.env` for local development. See that file for the full list. Highlights:
+Copy `.env.example` to `.env` for local development. Full list lives in that file; highlights:
 
-- `TMDB_API_KEY` — server-side key used by the refresh job (Phase 2+).
-- `BLOB_READ_WRITE_TOKEN` — auto-set on Vercel; needed locally only if using the Blob backend.
+- `TMDB_API_KEY` — server-side key used by the refresh job. **Never exposed to clients.**
+- `BLOB_READ_WRITE_TOKEN` — auto-injected on Vercel; set locally only if using the Blob backend.
 - `STORAGE_BACKEND` — `blob` or `file`. Defaults to `blob` on Vercel, `file` otherwise.
-- `CRON_SECRET` — shared secret for protecting manual `/api/refresh` calls.
+- `STORAGE_ROOT` — override for the file backend's root (tests use this; ignore otherwise).
+- `CRON_SECRET` — shared secret for manually triggering `/api/refresh` outside Vercel Cron.
+- `REFRESH_YEARS_BACK` — how many years/editions the historical catalogs should look back (default `10`).
 - `PORT` — local dev HTTP port (default `7500`).
 
-## Setup
+## Local development
 
 ```bash
 npm install
+cp .env.example .env
+# edit .env — at minimum set TMDB_API_KEY; STORAGE_BACKEND defaults to "file" locally
+
+# one-time: populate the local catalog store
+node -e 'require("./lib/refresh").run().then(r => console.log(r))'
+
+# run the addon
 npm start
 ```
 
-The addon starts at `http://localhost:7500`. Open `http://localhost:7500/configure` to:
+Open `http://localhost:7500/configure` to pick exclusions and install into Stremio.
 
-1. Enter your TMDB API key
-2. Optionally exclude any sources you don't want
-3. Click Install to add it to Stremio
+### Scripts
 
-## How It Works
+```bash
+npm test              # jest
+npm run lint          # eslint
+npm run format        # prettier --write
+npm run format:check  # prettier --check (CI)
+```
 
-1. Each source module fetches recommendations via RSS feeds or web scraping
-2. Extracted titles are resolved to IMDb IDs using the TMDB API
-3. Results are merged into unified catalogs with posters and metadata
-4. Each title's description is prefixed with its source (e.g. `[Decider]`, `[Vulture]`)
-5. Source data is cached for 6 hours, TMDB resolutions for 7 days
+## Deployment (Vercel)
 
-## Configuration
+1. Set the following in the Vercel project's env: `TMDB_API_KEY`, `CRON_SECRET`, `BLOB_READ_WRITE_TOKEN` (auto-created when you attach a Blob store).
+2. Attach a **Vercel Blob** store to the project (one-click in the Vercel dashboard).
+3. Deploy. Vercel Cron runs `/api/refresh` every 6 hours automatically (see `vercel.json`).
+4. Trigger the first refresh manually so users don't see an empty catalog:
+   ```bash
+   curl -X POST -H "x-cron-secret: $CRON_SECRET" https://<your-deploy>.vercel.app/api/refresh
+   ```
 
-| Setting            | Required | Description                                          |
-| ------------------ | -------- | ---------------------------------------------------- |
-| TMDB API Key       | Yes      | Used to resolve titles to IMDb IDs and fetch posters |
-| Exclude checkboxes | No       | Opt out of any source you don't want                 |
+## URL stability (important)
 
-## Deployment
+The addon's manifest URL and catalog ids are treated as a stable contract. Breaking them forces every user to re-install.
 
-The addon is deployment-agnostic. Run it locally with `node index.js`, or deploy to Vercel, Beamup, or Docker. For quick public access during development, use `cloudflared tunnel --url http://localhost:7500`.
+- New features land behind new optional config fields, never breaking changes.
+- New catalogs get new ids; existing catalog ids never change or disappear.
+- The manifest URL never changes. If we move domains, we keep the old URL serving too.
 
 ## License
 
