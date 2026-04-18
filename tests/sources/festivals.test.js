@@ -49,7 +49,7 @@ describe("sundance.fetchTitlesForYear", () => {
     expect(titles).toEqual([
       {
         title: "A Real Pain",
-        year: undefined,
+        year: 2025,
         type: "movie",
         source: "Sundance (2025)",
         link: "https://en.wikipedia.org/wiki/A_Real_Pain",
@@ -125,10 +125,10 @@ describe("venice.fetchTitlesForYear (real Wikipedia fixture)", () => {
     ]);
     expect(titles[0]).toMatchObject({
       title: "The Brutalist",
+      year: 2024,
       type: "movie",
       source: "Venice (2024)",
     });
-    expect(titles[0].year).toBeUndefined();
     expect(titles[0].link).toBe("https://en.wikipedia.org/wiki/The_Brutalist");
     const wolfs = titles.find((t) => t.title === "Wolfs");
     expect(wolfs.link).toBe("");
@@ -195,6 +195,26 @@ describe("list-fallback for older festival pages", () => {
 
     const titles = await tiff.fetchTitlesForYear(2024);
     expect(titles.map((t) => t.title)).toEqual(["Shared Title"]);
+  });
+});
+
+describe("year hint for TMDB resolver", () => {
+  // Wikipedia tables don't carry per-film release year, so we stamp the
+  // festival year on every row. Without it, TMDB's title-only search
+  // returned wrong matches (e.g. Cannes 2024's "Three" → 2005 film).
+  test("every row carries year=festivalYear so the resolver can disambiguate", async () => {
+    fetchPage.mockResolvedValueOnce(wikitableHtml(["Three", "Emilia Pérez"]));
+    const titles = await cannes.fetchTitlesForYear(2024);
+    expect(titles.every((t) => t.year === 2024)).toBe(true);
+  });
+
+  test("list-fallback path also stamps year", async () => {
+    const html = `<html><body><div id="mw-content-text">
+      <ul><li><i><a href="/wiki/Old_Film">Old Film</a></i></li></ul>
+    </div></body></html>`;
+    fetchPage.mockResolvedValueOnce(html);
+    const titles = await sundance.fetchTitlesForYear(2018);
+    expect(titles[0].year).toBe(2018);
   });
 });
 

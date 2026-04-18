@@ -26,7 +26,13 @@ const FESTIVALS = {
 // The `<ol class="references">` filter on the list pass is important: footnote
 // references italicise publication names ("Variety", "Deadline Hollywood")
 // which would otherwise be picked up as fake films.
-async function fetchWikipediaFilms(url) {
+//
+// `festivalYear` is stamped on every row as `year` so the downstream TMDB
+// resolver can disambiguate same-titled films (Wikipedia tables don't carry
+// per-film release year). Festival premieres are typically the same year
+// as the edition; the resolver tolerates ±1 via TMDB's fuzzy match for the
+// rare case where a film premiered in late December the prior year.
+async function fetchWikipediaFilms(url, festivalYear) {
   const html = await fetchPage(url);
   const $ = loadCheerio(html);
   const films = [];
@@ -45,7 +51,7 @@ async function fetchWikipediaFilms(url) {
         const link = href ? `https://en.wikipedia.org${href}` : "";
         films.push({
           title,
-          year: undefined,
+          year: festivalYear,
           type: "movie",
           source: "",
           link,
@@ -63,7 +69,7 @@ async function fetchWikipediaFilms(url) {
     const link = href ? `https://en.wikipedia.org${href}` : "";
     films.push({
       title,
-      year: undefined,
+      year: festivalYear,
       type: "movie",
       source: "",
       link,
@@ -83,7 +89,7 @@ function createFestivalSource(key) {
     const url = cfg.wikipediaUrl(y);
     let films;
     try {
-      films = await fetchWikipediaFilms(url);
+      films = await fetchWikipediaFilms(url, y);
     } catch (err) {
       console.error(`${sourceLabel} fetch error (${url}):`, err.message);
       return [];
