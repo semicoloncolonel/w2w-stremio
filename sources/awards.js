@@ -1,23 +1,7 @@
 const { fetchPage, loadCheerio } = require("../lib/scraper");
-const cache = require("../lib/cache");
+const years = require("../config/years");
 
-const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days — nominees don't change once announced
-
-// Letterboxd lists for film awards
-const AWARDS_LISTS = {
-  oscars: {
-    name: "Oscar Nominees",
-    urls: ["https://letterboxd.com/oscars/list/the-98th-academy-award-nominees-all-feature/"],
-    type: "movie",
-  },
-  goldenGlobes: {
-    name: "Golden Globe Nominees",
-    urls: ["https://letterboxd.com/filmfestival/list/2026-golden-globes-nominations/"],
-    type: "movie",
-  },
-};
-
-// Letterboxd scraper (same approach as festivals)
+// Letterboxd film-list scraper (one page).
 async function fetchLetterboxdList(url) {
   const html = await fetchPage(url);
   const $ = loadCheerio(html);
@@ -34,7 +18,6 @@ async function fetchLetterboxdList(url) {
     films.push({ title, year, type: "movie", source: "", link: "" });
   });
 
-  // Check for next page
   const nextLink = $("a.next").attr("href");
   return {
     films,
@@ -42,12 +25,14 @@ async function fetchLetterboxdList(url) {
   };
 }
 
+// Walk Letterboxd "next page" links until exhausted (or MAX_PAGES hit).
 async function fetchAllLetterboxdPages(baseUrl) {
   const allFilms = [];
   let url = baseUrl;
   let pageCount = 0;
+  const MAX_PAGES = 5;
 
-  while (url && pageCount < 5) {
+  while (url && pageCount < MAX_PAGES) {
     try {
       const { films, nextUrl } = await fetchLetterboxdList(url);
       allFilms.push(...films);
@@ -62,16 +47,16 @@ async function fetchAllLetterboxdPages(baseUrl) {
   return allFilms;
 }
 
-// Wikipedia scraper for TV award nominees
-async function fetchWikipediaTVNominees(url, sourceName) {
+// Wikipedia scraper for TV award nominees. `url` is the parameter; the
+// "Television" heading + tables convention is shared by Golden Globes and
+// Emmy pages.
+async function fetchWikipediaTVNominees(url) {
   const html = await fetchPage(url);
   const $ = loadCheerio(html);
 
   const shows = new Set();
-  // Find the Television section heading and get tables after it
   const tvHeading = $("#Television");
   if (tvHeading.length > 0) {
-    // Get tables that come after the Television heading
     tvHeading
       .closest("h3, h2")
       .nextAll("table.wikitable")
@@ -83,7 +68,7 @@ async function fetchWikipediaTVNominees(url, sourceName) {
       });
   }
 
-  // If no TV section found, fall back to all tables (for Emmys which are all TV)
+  // Fallback: pages like Emmys are entirely TV, so no "Television" heading.
   if (shows.size === 0) {
     $("table.wikitable")
       .not(".plainrowheaders")
@@ -98,114 +83,110 @@ async function fetchWikipediaTVNominees(url, sourceName) {
     title,
     year: undefined,
     type: "series",
-    source: sourceName,
+    source: "",
     link: "",
   }));
 }
 
-function createAwardsSource(key) {
-  const award = AWARDS_LISTS[key];
-  if (!award) return null;
+// --- Oscars (Letterboxd, films only) ---------------------------------------
 
-  const cacheKey = `source:awards:${key}`;
+async function oscarsFetchTitlesForEdition(n) {
+  const url = years.oscars.letterboxdUrl(n);
+  const sourceLabel = `Oscar Nominees (${years.ordinal(n)})`;
+  const films = await fetchAllLetterboxdPages(url);
 
-  async function fetchTitles() {
-    const cached = cache.get(cacheKey);
-    if (cached) return cached;
-
-    const allFilms = [];
-    const seen = new Set();
-
-    for (const url of award.urls) {
-      const films = await fetchAllLetterboxdPages(url);
-      for (const film of films) {
-        const k = film.title.toLowerCase();
-        if (seen.has(k)) continue;
-        seen.add(k);
-        allFilms.push({ ...film, source: award.name });
-      }
-    }
-
-    console.log(`${award.name}: ${allFilms.length} films`);
-    cache.set(cacheKey, allFilms, CACHE_TTL);
-    return allFilms;
+  const seen = new Set();
+  const out = [];
+  for (const film of films) {
+    const k = film.title.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push({ ...film, source: sourceLabel });
   }
-
-  return { fetchTitles, name: award.name, id: key };
+  console.log(`${sourceLabel}: ${out.length} films`);
+  return out;
 }
 
-// Emmy source (Wikipedia — all TV)
-const emmys = {
-  name: "Emmy Nominees",
-  id: "emmys",
-  async fetchTitles() {
-    const cached = cache.get("source:awards:emmys");
-    if (cached) return cached;
-
-    try {
-      const titles = await fetchWikipediaTVNominees(
-        "https://en.wikipedia.org/wiki/77th_Primetime_Emmy_Awards",
-        "Emmy Nominees"
-      );
-      console.log(`Emmy Nominees: ${titles.length} shows`);
-      cache.set("source:awards:emmys", titles, CACHE_TTL);
-      return titles;
-    } catch (err) {
-      console.error("Emmy scrape error:", err.message);
-      return [];
-    }
+const oscars = {
+  name: "Oscar Nominees",
+  id: "oscars",
+  fetchTitlesForEdition: oscarsFetchTitlesForEdition,
+  // Backward-compat wrapper for the current addon.js catalog handler. Batch D
+  // will replace the call site with a direct edition lookup; until then this
+  // keeps the existing "current edition" behavior intact.
+  fetchTitles() {
+    return oscarsFetchTitlesForEdition(years.oscars.current);
   },
 };
 
-// Golden Globes: Letterboxd for films + Wikipedia for TV
-const goldenGlobesBase = createAwardsSource("goldenGlobes");
+// --- Golden Globes (Letterboxd films + Wikipedia TV) ------------------------
+
+async function goldenGlobesFetchTitlesForEdition(n) {
+  const sourceLabel = `Golden Globe Nominees (${years.ordinal(n)})`;
+  const seen = new Set();
+  const out = [];
+
+  // Films from Letterboxd
+  try {
+    const films = await fetchAllLetterboxdPages(years.goldenGlobes.letterboxdUrl(n));
+    for (const f of films) {
+      const k = f.title.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ ...f, source: sourceLabel });
+    }
+  } catch (err) {
+    console.error(`${sourceLabel} Letterboxd error:`, err.message);
+  }
+
+  // TV nominees from Wikipedia
+  try {
+    const tvShows = await fetchWikipediaTVNominees(years.goldenGlobes.wikipediaUrl(n));
+    for (const s of tvShows) {
+      const k = s.title.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ ...s, source: sourceLabel });
+    }
+  } catch (err) {
+    console.error(`${sourceLabel} Wikipedia error:`, err.message);
+  }
+
+  console.log(`${sourceLabel}: ${out.length} total (film + TV)`);
+  return out;
+}
+
 const goldenGlobes = {
   name: "Golden Globe Nominees",
   id: "goldenGlobes",
-  async fetchTitles() {
-    const cached = cache.get("source:awards:goldenGlobes:merged");
-    if (cached) return cached;
-
-    const seen = new Set();
-    const allTitles = [];
-
-    // Films from Letterboxd
-    try {
-      const films = await goldenGlobesBase.fetchTitles();
-      for (const f of films) {
-        const k = f.title.toLowerCase();
-        if (!seen.has(k)) {
-          seen.add(k);
-          allTitles.push(f);
-        }
-      }
-    } catch (err) {
-      console.error("GG Letterboxd error:", err.message);
-    }
-
-    // TV shows from Wikipedia
-    try {
-      const tvShows = await fetchWikipediaTVNominees(
-        "https://en.wikipedia.org/wiki/83rd_Golden_Globe_Awards",
-        "Golden Globe Nominees"
-      );
-      for (const s of tvShows) {
-        const k = s.title.toLowerCase();
-        if (!seen.has(k)) {
-          seen.add(k);
-          allTitles.push(s);
-        }
-      }
-    } catch (err) {
-      console.error("GG Wikipedia error:", err.message);
-    }
-
-    console.log(`Golden Globe Nominees: ${allTitles.length} total (film + TV)`);
-    cache.set("source:awards:goldenGlobes:merged", allTitles, CACHE_TTL);
-    return allTitles;
+  fetchTitlesForEdition: goldenGlobesFetchTitlesForEdition,
+  fetchTitles() {
+    return goldenGlobesFetchTitlesForEdition(years.goldenGlobes.current);
   },
 };
 
-const oscars = createAwardsSource("oscars");
+// --- Emmys (Wikipedia, TV only) --------------------------------------------
+
+async function emmysFetchTitlesForEdition(n) {
+  const sourceLabel = `Emmy Nominees (${years.ordinal(n)})`;
+  try {
+    const titles = await fetchWikipediaTVNominees(years.emmys.wikipediaUrl(n));
+    const tagged = titles.map((t) => ({ ...t, source: sourceLabel }));
+    console.log(`${sourceLabel}: ${tagged.length} shows`);
+    return tagged;
+  } catch (err) {
+    console.error(`${sourceLabel} scrape error:`, err.message);
+    return [];
+  }
+}
+
+const emmys = {
+  name: "Emmy Nominees",
+  id: "emmys",
+  fetchTitlesForEdition: emmysFetchTitlesForEdition,
+  fetchTitles() {
+    return emmysFetchTitlesForEdition(years.emmys.current);
+  },
+};
 
 module.exports = { oscars, goldenGlobes, emmys };
