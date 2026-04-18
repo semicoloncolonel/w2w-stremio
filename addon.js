@@ -240,7 +240,7 @@ builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
 
   // Fetch all sources in parallel
   const results = await Promise.all(
-    enabledSources.map(async ([key, source]) => {
+    enabledSources.map(async ([_key, source]) => {
       try {
         const titles = await source.fetchTitles(config);
         return titles.map((t) => ({ ...t, sourceName: source.name }));
