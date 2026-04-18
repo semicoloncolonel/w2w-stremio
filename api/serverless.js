@@ -3,6 +3,25 @@ const addonInterface = require("../addon");
 const storage = require("../lib/storage");
 const configurePage = require("../lib/configure");
 const refreshHandler = require("./refresh");
+const { applyMobileMode } = require("../lib/manifest-template");
+
+// Decode the SDK's URL config segment ({"key":"on",...} URL-encoded) into
+// a plain object. Returns {} on any parse error so callers can treat the
+// result as a normal config map.
+function parseConfigSegment(raw) {
+  if (!raw) return {};
+  try {
+    return JSON.parse(decodeURIComponent(raw));
+  } catch (err) {
+    return {};
+  }
+}
+
+function isMobileMode(config) {
+  if (!config) return false;
+  const v = config.mobileMode;
+  return v === true || v === "true" || v === "on";
+}
 
 const router = getRouter(addonInterface);
 
@@ -34,6 +53,14 @@ async function serveManifestFromStorage(req, res, configRaw) {
       delete clone.behaviorHints.configurable;
     }
     manifest = clone;
+  }
+
+  // Mobile-mode transform: collapses year extras into the genre extra so
+  // Stremio mobile clients (which only render `genre`) can filter by year.
+  // See lib/manifest-template.js applyMobileMode for the rules.
+  const config = parseConfigSegment(configRaw);
+  if (isMobileMode(config)) {
+    manifest = applyMobileMode(manifest);
   }
 
   res.setHeader("Content-Type", "application/json; charset=utf-8");

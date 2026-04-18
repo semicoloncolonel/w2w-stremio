@@ -56,8 +56,8 @@ describe("manifest stability", () => {
     expect(manifest.config.some((c) => c.key === "tmdbKey")).toBe(false);
   });
 
-  test("version is exactly 1.1.0", () => {
-    expect(manifest.version).toBe("1.1.0");
+  test("version is exactly 1.1.1", () => {
+    expect(manifest.version).toBe("1.1.1");
   });
 
   test("preserves required core fields", () => {

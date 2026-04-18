@@ -158,6 +158,30 @@ describe("filterAndPaginate", () => {
     expect(result.map((it) => it.meta.id)).toEqual(["tt0000002"]);
   });
 
+  test("mobile mode: 'Year: 2022' in genre slot acts as year filter", () => {
+    const addon = loadAddon();
+    const data = awardCatalog();
+    const result = addon.filterAndPaginate(data, { genre: "Year: 2022" }, "oscars");
+    const ids = result.map((it) => it.meta.id).sort();
+    expect(ids).toEqual(["tt0000003", "tt0000004"]);
+  });
+
+  test("mobile mode: 'Year: 2025' in genre slot for festival filters by year, not category", () => {
+    const addon = loadAddon();
+    const data = festivalCatalog();
+    const result = addon.filterAndPaginate(data, { genre: "Year: 2025" }, "sundance");
+    expect(result.map((it) => it.meta.id)).toEqual(["tt1000001"]);
+  });
+
+  test("mobile mode: bare category in genre slot still works as category filter", () => {
+    const addon = loadAddon();
+    const data = awardCatalog();
+    // Default year filter (most recent = 2024) AND genre = "Best Director".
+    // Recent Drama (2024 Best Director) and Across Years (2024 Best Director) match.
+    const result = addon.filterAndPaginate(data, { genre: "Best Director" }, "oscars");
+    expect(result.map((it) => it.meta.id).sort()).toEqual(["tt0000002", "tt0000004"]);
+  });
+
   test("editorial: no default year filter (returns all items)", () => {
     const addon = loadAddon();
     const data = editorialCatalog();

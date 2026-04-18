@@ -116,15 +116,24 @@ function filterAndPaginate(data, extra, id) {
   const items = data.items || [];
   const years = Array.isArray(data.years) ? data.years : [];
 
+  // Mobile mode encodes year filters into the genre extra as "Year: 2024"
+  // (Stremio mobile only renders the genre extra). Decode that prefix here so
+  // the catalog handler treats it as a year filter regardless of which
+  // manifest variant the user installed. Web users never produce this shape.
+  const rawGenre = extra && extra.genre ? String(extra.genre) : null;
+  const yearPrefixMatch = rawGenre ? rawGenre.match(/^Year:\s*(\d{4})$/i) : null;
+  const yearFromGenre = yearPrefixMatch ? Number(yearPrefixMatch[1]) : null;
+  const genreFilter = yearFromGenre != null ? null : rawGenre;
+
   let yearFilter = null;
-  if (extra && extra.year != null && extra.year !== "") {
+  if (yearFromGenre != null) {
+    yearFilter = yearFromGenre;
+  } else if (extra && extra.year != null && extra.year !== "") {
     const y = Number(extra.year);
     if (!Number.isNaN(y)) yearFilter = y;
   } else if (id !== "w2w" && years.length > 0) {
     yearFilter = years[0];
   }
-
-  const genreFilter = extra && extra.genre ? String(extra.genre) : null;
 
   // When BOTH year and genre are set we require a single nomination matching
   // both (otherwise filtering by "2024 + Best Picture" would also match a film
