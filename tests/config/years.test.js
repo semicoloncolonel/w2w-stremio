@@ -36,9 +36,15 @@ describe("ordinal", () => {
 });
 
 describe("oscars URL builders", () => {
-  test("letterboxdUrl(98) matches the known 98th nominees list", () => {
+  test("letterboxdUrl(98) matches the known 98th master nominee list", () => {
     expect(years.oscars.letterboxdUrl(98)).toBe(
-      "https://letterboxd.com/oscars/list/the-98th-academy-award-nominees-all-feature/"
+      "https://letterboxd.com/oscars/list/the-98th-academy-award-feature-film-nominees/"
+    );
+  });
+
+  test("letterboxdDetailUrl(98) appends /detail/ to the master list URL", () => {
+    expect(years.oscars.letterboxdDetailUrl(98)).toBe(
+      "https://letterboxd.com/oscars/list/the-98th-academy-award-feature-film-nominees/detail/"
     );
   });
 

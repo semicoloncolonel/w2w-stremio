@@ -7,7 +7,7 @@ jest.mock("../../lib/scraper", () => {
 });
 
 const { fetchPage } = require("../../lib/scraper");
-const { oscars, goldenGlobes, emmys } = require("../../sources/awards");
+const { goldenGlobes, emmys } = require("../../sources/awards");
 
 beforeEach(() => {
   fetchPage.mockReset();
@@ -53,26 +53,10 @@ function wikipediaAllTvHtml(shows) {
   `;
 }
 
-describe("oscars.fetchTitlesForEdition", () => {
-  test("hits the edition-specific Letterboxd URL and returns parsed films", async () => {
-    fetchPage.mockResolvedValueOnce(letterboxdHtml([["Anora (2024)"], ["The Brutalist (2024)"]]));
-
-    const titles = await oscars.fetchTitlesForEdition(98);
-
-    expect(fetchPage).toHaveBeenCalledTimes(1);
-    expect(fetchPage).toHaveBeenCalledWith(
-      "https://letterboxd.com/oscars/list/the-98th-academy-award-nominees-all-feature/"
-    );
-    expect(titles).toHaveLength(2);
-    expect(titles[0]).toMatchObject({
-      title: "Anora",
-      year: 2024,
-      type: "movie",
-      source: "Oscar Nominees (98th)",
-    });
-    expect(titles[1]).toMatchObject({ title: "The Brutalist", year: 2024 });
-  });
-});
+// oscars.fetchTitlesForEdition has its own dedicated suite in
+// tests/awards-oscars-letterboxd.test.js — it uses the per-film notes on the
+// Letterboxd detail page to extract category metadata, which needs different
+// fixtures than the generic letterboxdHtml() helper above.
 
 describe("emmys.fetchTitlesForEdition", () => {
   test("hits the edition-specific Wikipedia URL and returns parsed shows", async () => {
@@ -125,15 +109,6 @@ describe("goldenGlobes.fetchTitlesForEdition", () => {
   });
 });
 
-describe("backward-compat fetchTitles wrapper", () => {
-  test("oscars.fetchTitles() delegates to the current edition", async () => {
-    fetchPage.mockResolvedValueOnce(letterboxdHtml([["Anora (2024)"]]));
-    await oscars.fetchTitles();
-    // The current edition is centralised in config/years; we only assert the
-    // URL shape so this test keeps working when the bumps roll over.
-    const url = fetchPage.mock.calls[0][0];
-    expect(url).toMatch(
-      /^https:\/\/letterboxd\.com\/oscars\/list\/the-\d+(?:st|nd|rd|th)-academy-award-nominees-all-feature\/$/
-    );
-  });
-});
+// The oscars.fetchTitles() backward-compat wrapper is exercised in
+// tests/awards-oscars-letterboxd.test.js (alongside the new
+// fetchTitlesForEdition implementation that it delegates to).

@@ -29,8 +29,14 @@ module.exports = {
     // ceremony held March 15, 2026. So ceremonyYear(n) = 1928 + n.
     current: 98,
     ceremonyYear: (n) => 1928 + n,
+    // The official `/oscars/` Letterboxd account maintains a per-edition master
+    // list at this slug. The grid view (no suffix) shows just titles; the
+    // `/detail/` view adds per-film notes that include the nominated category
+    // names — that's what `letterboxdDetailUrl` builds and the scraper hits.
     letterboxdUrl: (n) =>
-      `https://letterboxd.com/oscars/list/the-${ordinal(n)}-academy-award-nominees-all-feature/`,
+      `https://letterboxd.com/oscars/list/the-${ordinal(n)}-academy-award-feature-film-nominees/`,
+    letterboxdDetailUrl: (n) =>
+      `https://letterboxd.com/oscars/list/the-${ordinal(n)}-academy-award-feature-film-nominees/detail/`,
     wikipediaUrl: (n) => `https://en.wikipedia.org/wiki/${ordinal(n)}_Academy_Awards`,
   },
 
