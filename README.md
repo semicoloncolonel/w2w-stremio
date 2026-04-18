@@ -39,7 +39,7 @@ The dropdown options shown in Stremio are populated dynamically from the actuall
  └─────────────────┘                                └──────────────────┘
 ```
 
-1. **Refresh job** (`lib/refresh.js`, triggered by Vercel Cron at `/api/refresh`) runs daily.
+1. **Refresh job** (`lib/refresh.js`) runs daily on **GitHub Actions** (`.github/workflows/refresh.yml`) — Vercel's serverless function timeout (60s on Hobby) can't fit a full scrape, so the cron lives outside Vercel and writes directly to the same Vercel Blob store. The HTTP entry point at `/api/refresh` is still wired for manual triggers.
 2. It scrapes each source, resolves titles to IMDb metas via a **server-owned** TMDB key, and writes pre-built catalog JSON to persistent storage. It also writes a top-level `manifest.json` blob containing the full Stremio manifest with `extra.options` populated from the scraped years/categories so the in-app dropdowns reflect what's actually available.
 3. The addon's catalog handler becomes a cheap storage read — no scraping or TMDB traffic on the hot path. The `/manifest.json` route reads the storage blob directly so dropdown options stay fresh between deploys.
 
@@ -60,7 +60,7 @@ Copy `.env.example` to `.env` for local development. Full list lives in that fil
 - `BLOB_READ_WRITE_TOKEN` — auto-injected on Vercel; set locally only if using the Blob backend.
 - `STORAGE_BACKEND` — `blob` or `file`. Defaults to `blob` on Vercel, `file` otherwise.
 - `STORAGE_ROOT` — override for the file backend's root (tests use this; ignore otherwise).
-- `CRON_SECRET` — shared secret for manually triggering `/api/refresh` outside Vercel Cron.
+- `CRON_SECRET` — shared secret for manually triggering `/api/refresh` from outside the GitHub Actions workflow.
 - `REFRESH_YEARS_BACK` — how many years the festival catalogs should look back (default `10`).
 - `REFRESH_EDITIONS_BACK` — how many editions the award catalogs should look back (default: same as `REFRESH_YEARS_BACK`).
 - `PORT` — local dev HTTP port (default `7500`).
@@ -90,15 +90,23 @@ npm run format        # prettier --write
 npm run format:check  # prettier --check (CI)
 ```
 
-## Deployment (Vercel)
+## Deployment
 
-1. Set the following in the Vercel project's env: `TMDB_API_KEY`, `CRON_SECRET`, `BLOB_READ_WRITE_TOKEN` (auto-created when you attach a Blob store).
-2. Attach a **Vercel Blob** store to the project (one-click in the Vercel dashboard).
-3. Deploy. Vercel Cron runs `/api/refresh` daily automatically (see `vercel.json`).
-4. Trigger the first refresh manually so users don't see an empty catalog:
-   ```bash
-   curl -X POST -H "x-cron-secret: $CRON_SECRET" https://<your-deploy>.vercel.app/api/refresh
-   ```
+The addon is split across two services:
+
+- **Vercel** serves the read-only HTTP endpoints (`/manifest.json`, `/catalog/...`).
+- **GitHub Actions** runs the daily refresh (`.github/workflows/refresh.yml`) and writes to the Vercel Blob store.
+
+Setup:
+
+1. **Vercel project**
+   - Attach a **Vercel Blob** store (Storage tab → Create Database → Blob → Public). This auto-injects `BLOB_READ_WRITE_TOKEN` into the project's env.
+   - Set `TMDB_API_KEY` and `CRON_SECRET` (used only for manual `/api/refresh` triggers) in the project's env.
+   - Push to `main`; Vercel deploys automatically.
+2. **GitHub repository secrets** (Settings → Secrets and variables → Actions)
+   - `BLOB_READ_WRITE_TOKEN` — copy from Vercel → Storage → your Blob store → Tokens.
+   - `TMDB_API_KEY` — same key as Vercel.
+3. **First refresh** — go to the Actions tab, pick "Refresh catalogs", click "Run workflow". Subsequent runs happen automatically at 10:00 UTC daily.
 
 ## URL stability (important)
 

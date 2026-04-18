@@ -1,0 +1,37 @@
+name: Refresh catalogs
+
+# Runs the same lib/refresh.js the addon would run on Vercel cron, but here we
+# get GitHub Actions' generous timeout (6h default) instead of Vercel's 60s
+# Hobby cap. Writes the resulting blobs straight to the production Vercel Blob
+# store so the addon (still hosted on Vercel) sees fresh data on the next read.
+#
+# Required repo secrets:
+#   BLOB_READ_WRITE_TOKEN — copy from Vercel → Storage → your Blob store → Tokens
+#   TMDB_API_KEY          — server-side TMDB key for resolving titles to IMDb ids
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # 10:00 UTC daily (~3am Pacific)
+  workflow_dispatch: {} # lets you fire it manually from the Actions tab
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - name: Run refresh
+        env:
+          STORAGE_BACKEND: blob
+          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: node scripts/refresh-cli.js
