@@ -1,12 +1,9 @@
 const { fetchPage, loadCheerio } = require("../lib/scraper");
-const cache = require("../lib/cache");
 
 const URLS = [
   { url: "https://www.indiewire.com/gallery/best-new-movies-streaming/", type: "movie" },
   { url: "https://www.indiewire.com/gallery/best-new-tv-shows/", type: "series" },
 ];
-const CACHE_KEY = "source:indiewire";
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 // Strings that are definitely not show/movie titles
 const NOISE = new Set([
@@ -49,9 +46,6 @@ function isNoise(text) {
 }
 
 async function fetchTitles() {
-  const cached = cache.get(CACHE_KEY);
-  if (cached) return cached;
-
   const titles = [];
   const seen = new Set();
 
@@ -86,7 +80,6 @@ async function fetchTitles() {
   }
 
   console.log(`IndieWire: ${titles.length} titles scraped`);
-  cache.set(CACHE_KEY, titles, CACHE_TTL);
   return titles;
 }
 

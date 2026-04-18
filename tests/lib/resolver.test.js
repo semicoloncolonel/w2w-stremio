@@ -143,8 +143,10 @@ describe("resolve", () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  test("caches successful resolves so repeat calls skip network", async () => {
+  test("is stateless — repeat calls hit the network again", async () => {
     global.fetch
+      .mockResolvedValueOnce(jsonResponse({ results: [MOVIE_HIT] }))
+      .mockResolvedValueOnce(jsonResponse(MOVIE_EXTERNAL))
       .mockResolvedValueOnce(jsonResponse({ results: [MOVIE_HIT] }))
       .mockResolvedValueOnce(jsonResponse(MOVIE_EXTERNAL));
 
@@ -152,8 +154,8 @@ describe("resolve", () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
 
     const second = await resolver.resolve("Oppenheimer", 2023, "movie", "key");
-    // Second call must come straight from the in-memory cache
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+    // No internal cache — refresh job memoizes per-run instead.
+    expect(global.fetch).toHaveBeenCalledTimes(4);
     expect(second).toEqual(first);
   });
 });

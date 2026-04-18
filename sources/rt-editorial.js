@@ -1,10 +1,7 @@
 const { fetchPage, loadCheerio } = require("../lib/scraper");
 const { extractTitleFromHeadline, extractYear } = require("../lib/parser");
-const cache = require("../lib/cache");
 
 const URL = "https://editorial.rottentomatoes.com/";
-const CACHE_KEY = "source:rt-editorial";
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 const RECOMMENDATION_PATTERNS = [
   /best .*(movies?|shows?|series)/i,
@@ -20,9 +17,6 @@ function isRecommendationArticle(title) {
 }
 
 async function fetchTitles() {
-  const cached = cache.get(CACHE_KEY);
-  if (cached) return cached;
-
   try {
     const html = await fetchPage(URL);
     const $ = loadCheerio(html);
@@ -70,7 +64,6 @@ async function fetchTitles() {
       });
     }
 
-    cache.set(CACHE_KEY, titles, CACHE_TTL);
     return titles;
   } catch (err) {
     console.error("RT Editorial fetch error:", err.message);

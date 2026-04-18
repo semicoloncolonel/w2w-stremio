@@ -1,10 +1,7 @@
 const { fetchPage, loadCheerio } = require("../lib/scraper");
 const { extractYear } = require("../lib/parser");
-const cache = require("../lib/cache");
 
 const TAG_URL = "https://www.vulture.com/tags/what-to-watch/";
-const CACHE_KEY = "source:vulture";
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 // Noise to filter out from scraped headings
 const NOISE_PATTERNS = [
@@ -37,9 +34,6 @@ function isNoise(text) {
 }
 
 async function fetchTitles() {
-  const cached = cache.get(CACHE_KEY);
-  if (cached) return cached;
-
   try {
     // Step 1: Get the most recent weekly article URL from the tag page
     const listHtml = await fetchPage(TAG_URL);
@@ -59,7 +53,6 @@ async function fetchTitles() {
 
     if (articleUrls.length === 0) {
       console.log("Vulture: no weekly articles found");
-      cache.set(CACHE_KEY, [], CACHE_TTL);
       return [];
     }
 
@@ -101,7 +94,6 @@ async function fetchTitles() {
     }
 
     console.log(`Vulture: ${titles.length} titles from ${toScrape.length} articles`);
-    cache.set(CACHE_KEY, titles, CACHE_TTL);
     return titles;
   } catch (err) {
     console.error("Vulture fetch error:", err.message);

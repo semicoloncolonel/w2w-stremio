@@ -1,19 +1,13 @@
 const { fetchPage, loadCheerio } = require("../lib/scraper");
-const cache = require("../lib/cache");
 
 // Only need page 1 — it has the 4 most recent weekly column picks
 const SPOTLIGHT_URL = "https://www.nytimes.com/spotlight/what-to-watch";
-const CACHE_KEY = "source:nyt";
-const CACHE_TTL = 6 * 60 * 60 * 1000;
 
 // Match the weekly "What to Watch" column format
 const WEEKLY_COLUMN =
   /\u2018([^\u2019]+)\u2019,?\s+(Plus\s+\d+\s+Things?\s+to\s+Watch|Reboot|Is\s+Back)/i;
 
 async function fetchTitles() {
-  const cached = cache.get(CACHE_KEY);
-  if (cached) return cached;
-
   const titles = [];
   const seen = new Set();
 
@@ -51,7 +45,6 @@ async function fetchTitles() {
   }
 
   console.log(`NYT weekly column: ${titles.length} picks (last 4 weeks)`);
-  cache.set(CACHE_KEY, titles, CACHE_TTL);
   return titles;
 }
 
