@@ -19,8 +19,18 @@ All sources are enabled by default. You can exclude any source from the configur
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - TMDB API key (free at [themoviedb.org](https://www.themoviedb.org/settings/api))
+
+## Environment Variables
+
+Copy `.env.example` to `.env` for local development. See that file for the full list. Highlights:
+
+- `TMDB_API_KEY` — server-side key used by the refresh job (Phase 2+).
+- `BLOB_READ_WRITE_TOKEN` — auto-set on Vercel; needed locally only if using the Blob backend.
+- `STORAGE_BACKEND` — `blob` or `file`. Defaults to `blob` on Vercel, `file` otherwise.
+- `CRON_SECRET` — shared secret for protecting manual `/api/refresh` calls.
+- `PORT` — local dev HTTP port (default `7500`).
 
 ## Setup
 
