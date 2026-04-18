@@ -1,6 +1,6 @@
 # What to Watch — Stremio Addon
 
-A Stremio catalog addon that aggregates editorial picks, festival lineups, and award nominees into browsable catalogs. Data is refreshed daily server-side — **users don't need a TMDB key**.
+A Stremio catalog addon that aggregates editorial picks, festival lineups, and award nominees into browsable catalogs.
 
 ## Catalogs
 
