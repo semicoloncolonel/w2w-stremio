@@ -1,95 +1,38 @@
 const { addonBuilder } = require("stremio-addon-sdk");
-const { resolve } = require("./lib/resolver");
+const storage = require("./lib/storage");
 
-// Editorial recommendation sources
-const sources = {
-  decider: require("./sources/decider"),
-  variety: require("./sources/variety"),
-  vulture: require("./sources/vulture"),
-  indiewire: require("./sources/indiewire"),
-  nyt: require("./sources/nyt"),
-};
-
-// "Now Streaming" source (separate catalog)
-const rtBrowse = require("./sources/rt-browse");
-
-// Film festival sources (separate catalogs per festival)
-const { sundance, cannes, berlinale } = require("./sources/festivals");
-const festivals = { sundance, cannes, berlinale };
-
-// Awards sources
-const { oscars, goldenGlobes, emmys } = require("./sources/awards");
-const awards = { oscars, goldenGlobes, emmys };
+// Catalogs are pre-built server-side by the refresh job and stored as
+// `catalog/${id}/${type}.json`. The handler is a thin storage read — no live
+// scraping, no TMDB calls, no per-request resolver use.
 
 const catalogs = [
-  {
-    id: "w2w",
-    type: "movie",
-    name: "What to Watch",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "w2w",
-    type: "series",
-    name: "What to Watch",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "now-streaming",
-    type: "movie",
-    name: "Now Streaming",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "sundance",
-    type: "movie",
-    name: "Sundance Film Festival",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "cannes",
-    type: "movie",
-    name: "Cannes Film Festival",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "berlinale",
-    type: "movie",
-    name: "Berlinale",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "oscars",
-    type: "movie",
-    name: "Oscar Nominees",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "goldenGlobes",
-    type: "movie",
-    name: "Golden Globe Nominees",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "goldenGlobes",
-    type: "series",
-    name: "Golden Globe Nominees",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-  {
-    id: "emmys",
-    type: "series",
-    name: "Emmy Nominees",
-    extra: [{ name: "skip", isRequired: false }],
-  },
-];
+  { id: "w2w", type: "movie", name: "What to Watch" },
+  { id: "w2w", type: "series", name: "What to Watch" },
+  { id: "now-streaming", type: "movie", name: "Now Streaming" },
+
+  { id: "sundance", type: "movie", name: "Sundance Film Festival" },
+  { id: "sundance-all", type: "movie", name: "Sundance Film Festival — All Years" },
+  { id: "cannes", type: "movie", name: "Cannes Film Festival" },
+  { id: "cannes-all", type: "movie", name: "Cannes Film Festival — All Years" },
+  { id: "berlinale", type: "movie", name: "Berlinale" },
+  { id: "berlinale-all", type: "movie", name: "Berlinale — All Years" },
+
+  { id: "oscars", type: "movie", name: "Oscar Nominees" },
+  { id: "oscars-all", type: "movie", name: "Oscar Nominees — All Editions" },
+  { id: "goldenGlobes", type: "movie", name: "Golden Globe Nominees" },
+  { id: "goldenGlobes-all", type: "movie", name: "Golden Globe Nominees — All Editions" },
+  { id: "goldenGlobes", type: "series", name: "Golden Globe Nominees" },
+  { id: "goldenGlobes-all", type: "series", name: "Golden Globe Nominees — All Editions" },
+  { id: "emmys", type: "series", name: "Emmy Nominees" },
+  { id: "emmys-all", type: "series", name: "Emmy Nominees — All Editions" },
+].map((c) => ({ ...c, extra: [{ name: "skip", isRequired: false }] }));
 
 const manifest = {
   id: "community.w2w",
-  version: "1.0.0",
+  version: "2.0.0",
   name: "What to Watch",
   description:
-    "Editorial picks, new streaming releases, film festival lineups (Sundance, Cannes, Berlinale), and award nominees (Oscars, Golden Globes, Emmys)",
+    "Editorial picks, new streaming releases, film festival lineups (Sundance, Cannes, Berlinale — current and historical), and award nominees (Oscars, Golden Globes, Emmys — current and all-time). Refreshed every 6 hours server-side; no API key required.",
   logo: "https://img.icons8.com/fluency/512/movie-projector.png",
   resources: ["catalog"],
   types: ["movie", "series"],
@@ -97,15 +40,9 @@ const manifest = {
   catalogs,
   behaviorHints: {
     configurable: true,
-    configurationRequired: true,
+    configurationRequired: false,
   },
   config: [
-    {
-      key: "tmdbKey",
-      type: "text",
-      title: "TMDB API Key (free at themoviedb.org)",
-      required: true,
-    },
     { key: "noDecider", type: "checkbox", title: "Exclude Decider" },
     { key: "noVariety", type: "checkbox", title: "Exclude Variety" },
     { key: "noVulture", type: "checkbox", title: "Exclude Vulture" },
@@ -113,156 +50,70 @@ const manifest = {
     { key: "noNyt", type: "checkbox", title: "Exclude New York Times" },
     { key: "noRt", type: "checkbox", title: "Exclude Now Streaming (Rotten Tomatoes)" },
     { key: "noSundance", type: "checkbox", title: "Exclude Sundance" },
+    { key: "noSundanceAll", type: "checkbox", title: "Exclude Sundance (All Years)" },
     { key: "noCannes", type: "checkbox", title: "Exclude Cannes" },
+    { key: "noCannesAll", type: "checkbox", title: "Exclude Cannes (All Years)" },
     { key: "noBerlinale", type: "checkbox", title: "Exclude Berlinale" },
+    { key: "noBerlinaleAll", type: "checkbox", title: "Exclude Berlinale (All Years)" },
     { key: "noOscars", type: "checkbox", title: "Exclude Oscar Nominees" },
+    { key: "noOscarsAll", type: "checkbox", title: "Exclude Oscar Nominees (All Editions)" },
     { key: "noGoldenGlobes", type: "checkbox", title: "Exclude Golden Globe Nominees" },
+    {
+      key: "noGoldenGlobesAll",
+      type: "checkbox",
+      title: "Exclude Golden Globe Nominees (All Editions)",
+    },
     { key: "noEmmys", type: "checkbox", title: "Exclude Emmy Nominees" },
+    { key: "noEmmysAll", type: "checkbox", title: "Exclude Emmy Nominees (All Editions)" },
   ],
 };
 
 const builder = new addonBuilder(manifest);
 
-// Helper: resolve an array of raw titles into Stremio metas
-async function resolveTitles(rawTitles, type, tmdbKey) {
-  const metas = [];
-  const BATCH_SIZE = 5;
+// Catalog id -> exclusion config keys. Setting any of these to true hides the
+// catalog. For "w2w", exclusion only kicks in when ALL editorial sources are
+// excluded — catalogs are pre-built server-side, so per-source filtering at
+// request time is not possible without re-resolving.
+const EXCLUSION_KEYS = {
+  w2w: ["noDecider", "noVariety", "noVulture", "noIndiewire", "noNyt"],
+  "now-streaming": ["noRt"],
+  sundance: ["noSundance"],
+  "sundance-all": ["noSundanceAll"],
+  cannes: ["noCannes"],
+  "cannes-all": ["noCannesAll"],
+  berlinale: ["noBerlinale"],
+  "berlinale-all": ["noBerlinaleAll"],
+  oscars: ["noOscars"],
+  "oscars-all": ["noOscarsAll"],
+  goldenGlobes: ["noGoldenGlobes"],
+  "goldenGlobes-all": ["noGoldenGlobesAll"],
+  emmys: ["noEmmys"],
+  "emmys-all": ["noEmmysAll"],
+};
 
-  for (let i = 0; i < rawTitles.length; i += BATCH_SIZE) {
-    const batch = rawTitles.slice(i, i + BATCH_SIZE);
-    const resolved = await Promise.all(
-      batch.map(async (t) => {
-        const meta = await resolve(t.title, t.year, t.type, tmdbKey);
-        if (meta && meta.type === type) {
-          if (t.sourceName) {
-            meta.description = `[${t.sourceName}] ${meta.description || ""}`.trim();
-          }
-          return meta;
-        }
-        return null;
-      })
-    );
-    for (const meta of resolved) {
-      if (meta) metas.push(meta);
-    }
-  }
-
-  // Deduplicate by IMDb ID
-  const seen = new Set();
-  return metas.filter((m) => {
-    if (seen.has(m.id)) return false;
-    seen.add(m.id);
-    return true;
-  });
+function isExcluded(config, key) {
+  if (!config) return false;
+  const v = config[key];
+  return v === true || v === "true" || v === "on";
 }
 
-function isExcluded(config, configKey) {
-  return config[configKey] === "true" || config[configKey] === true || config[configKey] === "on";
+function isExcludedForCatalog(config, id) {
+  const keys = EXCLUSION_KEYS[id];
+  if (!keys || keys.length === 0) return false;
+  // For w2w, treat as excluded only when every editorial source is excluded.
+  // Single-key entries are excluded when their one key is set.
+  return keys.every((k) => isExcluded(config, k));
 }
 
 builder.defineCatalogHandler(async ({ type, id, extra, config }) => {
-  const tmdbKey = config?.tmdbKey;
-  if (!tmdbKey) return { metas: [] };
+  if (isExcludedForCatalog(config, id, type)) return { metas: [] };
 
   const skip = parseInt(extra?.skip) || 0;
+  const data = await storage.getJSON(`catalog/${id}/${type}.json`);
+  if (!data || !Array.isArray(data.metas)) return { metas: [] };
 
-  // "Now Streaming" catalog — RT Browse only
-  if (id === "now-streaming") {
-    if (isExcluded(config, "noRt")) return { metas: [] };
-
-    try {
-      const rawTitles = await rtBrowse.fetchTitles(config);
-      const page = rawTitles.slice(skip, skip + 100);
-      const metas = await resolveTitles(page, type, tmdbKey);
-      console.log(`Now Streaming (${type}): ${rawTitles.length} raw → ${metas.length} resolved`);
-      return { metas, cacheMaxAge: 21600, staleRevalidate: 43200, staleError: 604800 };
-    } catch (err) {
-      console.error("Now Streaming error:", err.message);
-      return { metas: [] };
-    }
-  }
-
-  // Film festival catalogs
-  if (festivals[id]) {
-    if (isExcluded(config, `no${id.charAt(0).toUpperCase() + id.slice(1)}`)) return { metas: [] };
-
-    try {
-      const rawTitles = await festivals[id].fetchTitles();
-      const page = rawTitles.slice(skip, skip + 100);
-      const metas = await resolveTitles(page, type, tmdbKey);
-      console.log(
-        `${festivals[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`
-      );
-      return { metas, cacheMaxAge: 43200, staleRevalidate: 86400, staleError: 604800 };
-    } catch (err) {
-      console.error(`${festivals[id].name} error:`, err.message);
-      return { metas: [] };
-    }
-  }
-
-  // Awards catalogs
-  if (awards[id]) {
-    const excludeKey = `no${id.charAt(0).toUpperCase() + id.slice(1)}`;
-    if (isExcluded(config, excludeKey)) return { metas: [] };
-
-    try {
-      const rawTitles = await awards[id].fetchTitles();
-      const page = rawTitles.slice(skip, skip + 100);
-      const metas = await resolveTitles(page, type, tmdbKey);
-      console.log(
-        `${awards[id].name} (${type}): ${rawTitles.length} raw → ${metas.length} resolved`
-      );
-      return { metas, cacheMaxAge: 86400, staleRevalidate: 172800, staleError: 604800 };
-    } catch (err) {
-      console.error(`${awards[id].name} error:`, err.message);
-      return { metas: [] };
-    }
-  }
-
-  // "What to Watch" catalog — merged editorial sources
-  if (id !== "w2w") return { metas: [] };
-
-  const exclusionMap = {
-    noDecider: "decider",
-    noVariety: "variety",
-    noVulture: "vulture",
-    noIndiewire: "indiewire",
-    noNyt: "nyt",
-  };
-
-  const excluded = new Set();
-  for (const [configKey, sourceKey] of Object.entries(exclusionMap)) {
-    if (isExcluded(config, configKey)) excluded.add(sourceKey);
-  }
-
-  const enabledSources = Object.entries(sources).filter(([key]) => !excluded.has(key));
-  console.log(`Fetching from ${enabledSources.length} sources (${type})...`);
-
-  // Fetch all sources in parallel
-  const results = await Promise.all(
-    enabledSources.map(async ([_key, source]) => {
-      try {
-        const titles = await source.fetchTitles(config);
-        return titles.map((t) => ({ ...t, sourceName: source.name }));
-      } catch (err) {
-        console.error(`Error fetching ${source.name}:`, err.message);
-        return [];
-      }
-    })
-  );
-
-  const allTitles = results.flat();
-  const page = allTitles.slice(skip, skip + 100);
-  const metas = await resolveTitles(page, type, tmdbKey);
-
-  console.log(`What to Watch (${type}): ${allTitles.length} raw → ${metas.length} resolved`);
-
-  return {
-    metas,
-    cacheMaxAge: 6 * 60 * 60,
-    staleRevalidate: 12 * 60 * 60,
-    staleError: 7 * 24 * 60 * 60,
-  };
+  const metas = data.metas.slice(skip, skip + 100);
+  return { metas, cacheMaxAge: 3600, staleRevalidate: 21600, staleError: 604800 };
 });
 
 module.exports = builder.getInterface();
