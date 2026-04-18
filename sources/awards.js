@@ -222,92 +222,39 @@ async function fetchWikipediaCategorizedNominees(url, sectionIds, sectionTypes) 
   return rows;
 }
 
-// --- Oscars (Letterboxd, films only) ---------------------------------------
-
-// Cap on /detail/ pagination follow. Letterboxd renders ~100 entries per page
-// and Oscar editions cap around 50 films, so 1 page is the norm — but we walk
-// `a.next` defensively in case Letterboxd changes the page size.
-const OSCARS_MAX_DETAIL_PAGES = 5;
-
-// Acting categories embed the nominee's name as ", <Person>" after the
-// category label (e.g. "Best Actor in a Leading Role, Cillian Murphy"). Strip
-// that suffix so the dropdown groups all acting nominations under the same
-// canonical category name.
-function stripPersonSuffix(category) {
-  const idx = category.indexOf(",");
-  return idx === -1 ? category.trim() : category.slice(0, idx).trim();
-}
-
-// Parse one /detail/ page of the master per-edition Letterboxd list. Each
-// `article.list-detailed-entry` carries a `data-item-name="Title (YYYY)"` and
-// a `.notes` block with one <a> per nominated category. Returns one row per
-// (film, category) pair plus the next-page URL (or null).
-function parseOscarsDetailPage(html) {
-  const $ = loadCheerio(html);
-  const rows = [];
-
-  $("article.list-detailed-entry").each((_, el) => {
-    const $el = $(el);
-    const name = $el.find("[data-item-name]").attr("data-item-name");
-    if (!name) return;
-
-    const match = name.match(/^(.+?)\s*\((\d{4})\)\s*$/);
-    const title = match ? match[1].trim() : name.trim();
-    const year = match ? parseInt(match[2], 10) : undefined;
-
-    // Each <a> inside .notes is one nominated category. The leading <p> tag
-    // ("N nominations / M wins") has no <a>, so it's skipped naturally.
-    $el.find(".notes a").each((__, link) => {
-      const raw = $(link).text().trim();
-      if (!raw) return;
-      const category = stripPersonSuffix(raw);
-      if (!category) return;
-      rows.push({ title, year, category });
-    });
-  });
-
-  const nextHref = $("a.next").attr("href");
-  const nextUrl = nextHref ? `https://letterboxd.com${nextHref}` : null;
-  return { rows, nextUrl };
-}
+// --- Oscars (Wikipedia, films only) ---------------------------------------
+//
+// Each per-edition page (e.g. /wiki/97th_Academy_Awards) puts every category
+// in one big wikitable under `<h3 id="Awards">`. Each `<td>` of that table
+// has the modern `<div><b><a>Category Name</a></b></div><ul>...</ul>` layout
+// the Wikipedia scraper above already understands.
 
 async function oscarsFetchTitlesForEdition(n) {
   const sourceLabel = `Oscar Nominees (${years.ordinal(n)})`;
   const ceremonyYear = years.oscars.ceremonyYear(n);
-  const out = [];
-
-  let url = years.oscars.letterboxdDetailUrl(n);
-  let pageCount = 0;
-
-  while (url && pageCount < OSCARS_MAX_DETAIL_PAGES) {
-    let html;
-    try {
-      html = await fetchPage(url);
-    } catch (err) {
-      console.error(`${sourceLabel} fetch error (${url}):`, err.message);
-      break;
-    }
-
-    const { rows, nextUrl } = parseOscarsDetailPage(html);
-    for (const r of rows) {
-      out.push({
-        title: r.title,
-        year: r.year,
-        category: r.category,
-        ceremonyYear,
-        type: "movie",
-        source: sourceLabel,
-        link: "",
-      });
-    }
-
-    url = nextUrl;
-    pageCount++;
-    if (url) await new Promise((r) => setTimeout(r, 500));
+  let rows;
+  try {
+    rows = await fetchWikipediaCategorizedNominees(
+      years.oscars.wikipediaUrl(n),
+      ["Awards"],
+      () => "movie"
+    );
+  } catch (err) {
+    console.error(`${sourceLabel} Wikipedia error:`, err.message);
+    return [];
   }
 
-  // Distinct films vs total rows — useful sanity-check during refresh runs.
-  const distinctFilms = new Set(out.map((r) => `${r.title.toLowerCase()}::${r.year || ""}`)).size;
+  const out = rows.map((r) => ({
+    title: r.title,
+    year: undefined,
+    category: r.category,
+    ceremonyYear,
+    type: "movie",
+    source: sourceLabel,
+    link: "",
+  }));
+
+  const distinctFilms = new Set(out.map((r) => r.title.toLowerCase())).size;
   console.log(`${sourceLabel}: ${out.length} nominations across ${distinctFilms} films`);
   return out;
 }

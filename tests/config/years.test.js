@@ -36,16 +36,8 @@ describe("ordinal", () => {
 });
 
 describe("oscars URL builders", () => {
-  test("letterboxdUrl(98) matches the known 98th master nominee list", () => {
-    expect(years.oscars.letterboxdUrl(98)).toBe(
-      "https://letterboxd.com/oscars/list/the-98th-academy-award-feature-film-nominees/"
-    );
-  });
-
-  test("letterboxdDetailUrl(98) appends /detail/ to the master list URL", () => {
-    expect(years.oscars.letterboxdDetailUrl(98)).toBe(
-      "https://letterboxd.com/oscars/list/the-98th-academy-award-feature-film-nominees/detail/"
-    );
+  test("wikipediaUrl(98) matches the 98th Academy Awards page", () => {
+    expect(years.oscars.wikipediaUrl(98)).toBe("https://en.wikipedia.org/wiki/98th_Academy_Awards");
   });
 
   test("ceremonyYear(98) is 2026", () => {
@@ -54,12 +46,6 @@ describe("oscars URL builders", () => {
 });
 
 describe("goldenGlobes URL builders", () => {
-  test("letterboxdUrl(83) matches the known 2026 nominations list", () => {
-    expect(years.goldenGlobes.letterboxdUrl(83)).toBe(
-      "https://letterboxd.com/filmfestival/list/2026-golden-globes-nominations/"
-    );
-  });
-
   test("wikipediaUrl(83) matches the 83rd Golden Globe Awards page", () => {
     expect(years.goldenGlobes.wikipediaUrl(83)).toBe(
       "https://en.wikipedia.org/wiki/83rd_Golden_Globe_Awards"
@@ -80,21 +66,33 @@ describe("emmys URL builders", () => {
 });
 
 describe("festival URL builders", () => {
-  test("sundance.letterboxdUrl(2025) matches the known 2025 list", () => {
-    expect(years.sundance.letterboxdUrl(2025)).toBe(
-      "https://letterboxd.com/sundance/list/2025-sundance-film-festival/"
+  test("sundance.wikipediaUrl(2025) matches the 2025 Sundance page", () => {
+    expect(years.sundance.wikipediaUrl(2025)).toBe(
+      "https://en.wikipedia.org/wiki/2025_Sundance_Film_Festival"
     );
   });
 
-  test("cannes.letterboxdUrl(2025) matches the known 2025 list", () => {
-    expect(years.cannes.letterboxdUrl(2025)).toBe(
-      "https://letterboxd.com/festival_cannes/list/festival-de-cannes-official-selection-2025/"
+  test("cannes.wikipediaUrl(2025) matches the 2025 Cannes page", () => {
+    expect(years.cannes.wikipediaUrl(2025)).toBe(
+      "https://en.wikipedia.org/wiki/2025_Cannes_Film_Festival"
     );
   });
 
-  test("berlinale.letterboxdUrl(2026) matches the known 2026 list", () => {
-    expect(years.berlinale.letterboxdUrl(2026)).toBe(
-      "https://letterboxd.com/berlinale_ifb/list/berlinale-programme-2026/"
+  test("berlinale.wikipediaUrl(2026) maps to the 76th Berlinale page", () => {
+    expect(years.berlinale.wikipediaUrl(2026)).toBe(
+      "https://en.wikipedia.org/wiki/76th_Berlin_International_Film_Festival"
+    );
+  });
+
+  test("tiff.wikipediaUrl(2024) matches the 2024 TIFF page", () => {
+    expect(years.tiff.wikipediaUrl(2024)).toBe(
+      "https://en.wikipedia.org/wiki/2024_Toronto_International_Film_Festival"
+    );
+  });
+
+  test("venice.wikipediaUrl(2024) maps to the 81st Venice page", () => {
+    expect(years.venice.wikipediaUrl(2024)).toBe(
+      "https://en.wikipedia.org/wiki/81st_Venice_International_Film_Festival"
     );
   });
 });

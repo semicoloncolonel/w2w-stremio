@@ -27,16 +27,13 @@ module.exports = {
   oscars: {
     // 1st Academy Awards held May 16, 1929 (honoring 1927/28 films); 98th
     // ceremony held March 15, 2026. So ceremonyYear(n) = 1928 + n.
+    //
+    // Wikipedia is the only source we use: the official Letterboxd /oscars/
+    // account began returning HTTP 403 on the /detail/ list URL in 2026, and
+    // the Wikipedia per-edition page has the same category data going back
+    // decades with a stable URL pattern.
     current: 98,
     ceremonyYear: (n) => 1928 + n,
-    // The official `/oscars/` Letterboxd account maintains a per-edition master
-    // list at this slug. The grid view (no suffix) shows just titles; the
-    // `/detail/` view adds per-film notes that include the nominated category
-    // names — that's what `letterboxdDetailUrl` builds and the scraper hits.
-    letterboxdUrl: (n) =>
-      `https://letterboxd.com/oscars/list/the-${ordinal(n)}-academy-award-feature-film-nominees/`,
-    letterboxdDetailUrl: (n) =>
-      `https://letterboxd.com/oscars/list/the-${ordinal(n)}-academy-award-feature-film-nominees/detail/`,
     wikipediaUrl: (n) => `https://en.wikipedia.org/wiki/${ordinal(n)}_Academy_Awards`,
   },
 
@@ -45,10 +42,6 @@ module.exports = {
     // 83rd ceremony held January 11, 2026. So ceremonyYear(n) = 1943 + n.
     current: 83,
     ceremonyYear: (n) => 1943 + n,
-    letterboxdUrl: (n) => {
-      const y = 1943 + n;
-      return `https://letterboxd.com/filmfestival/list/${y}-golden-globes-nominations/`;
-    },
     wikipediaUrl: (n) => `https://en.wikipedia.org/wiki/${ordinal(n)}_Golden_Globe_Awards`,
   },
 
@@ -60,31 +53,36 @@ module.exports = {
     wikipediaUrl: (n) => `https://en.wikipedia.org/wiki/${ordinal(n)}_Primetime_Emmy_Awards`,
   },
 
+  // Festivals all use Wikipedia as the data source. We previously tried the
+  // official Letterboxd accounts (sundance/, festival_cannes/, berlinale_ifb/,
+  // tiff_net/) but coverage was inconsistent across years — Cannes only kept
+  // a 2025 list, Berlinale only kept the current edition, Sundance only had
+  // 2023+, etc. Wikipedia has reliable per-edition pages going back decades
+  // and the scraper for it (lib/scraper.js + sources/festivals.js) was already
+  // proven by Venice. The cost is that Wikipedia tables don't expose per-film
+  // release year, so the resolver falls back to title-only TMDB matching.
+
   sundance: {
     currentYear: 2025,
-    letterboxdUrl: (y) => `https://letterboxd.com/sundance/list/${y}-sundance-film-festival/`,
+    wikipediaUrl: (y) => `https://en.wikipedia.org/wiki/${y}_Sundance_Film_Festival`,
   },
 
   cannes: {
     currentYear: 2025,
-    letterboxdUrl: (y) =>
-      `https://letterboxd.com/festival_cannes/list/festival-de-cannes-official-selection-${y}/`,
+    wikipediaUrl: (y) => `https://en.wikipedia.org/wiki/${y}_Cannes_Film_Festival`,
   },
 
   berlinale: {
+    // 1st Berlinale was held in 1951; 75th = 2025, 76th = 2026.
+    // edition = year - 1950.
     currentYear: 2026,
-    letterboxdUrl: (y) => `https://letterboxd.com/berlinale_ifb/list/berlinale-programme-${y}/`,
+    wikipediaUrl: (y) =>
+      `https://en.wikipedia.org/wiki/${ordinal(y - 1950)}_Berlin_International_Film_Festival`,
   },
 
   venice: {
     // Venice International Film Festival uses post-war (1943-based) edition
-    // numbering. 81st edition = 2024, 82nd = 2025. See `editionForYear`.
-    // No official Letterboxd account exists; community lists are incomplete
-    // (the `neperfectionist` list set is missing 2020 etc.) so we use the
-    // per-edition Wikipedia page, which has reliable coverage back further
-    // and yields more films per year (e.g. 244 vs 174 for 2024). Year of
-    // each film is not present on Wikipedia tables — only the festival year
-    // is captured (in the source label).
+    // numbering. 81st edition = 2024, 82nd = 2025.
     currentYear: 2025,
     currentEdition: 82,
     editionForYear: (y) => y - 1943,
@@ -93,11 +91,10 @@ module.exports = {
   },
 
   tiff: {
-    // Toronto International Film Festival. The official `tiff_net` account
-    // maintains a per-year Letterboxd list with comprehensive coverage
-    // (~258 films for 2024). Reuses the existing Letterboxd scraper.
+    // Toronto International Film Festival. Wikipedia per-year pages
+    // (e.g. /wiki/2024_Toronto_International_Film_Festival) have ~300+
+    // films per edition with stable URLs.
     currentYear: 2025,
-    letterboxdUrl: (y) =>
-      `https://letterboxd.com/tiff_net/list/${y}-toronto-international-film-festival/`,
+    wikipediaUrl: (y) => `https://en.wikipedia.org/wiki/${y}_Toronto_International_Film_Festival`,
   },
 };
