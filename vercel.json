@@ -1,7 +1,4 @@
 {
   "builds": [{ "src": "api/serverless.js", "use": "@vercel/node" }],
-  "routes": [{ "src": "/(.*)", "dest": "api/serverless.js" }],
-  "functions": {
-    "api/serverless.js": { "maxDuration": 300 }
-  }
+  "routes": [{ "src": "/(.*)", "dest": "api/serverless.js" }]
 }
