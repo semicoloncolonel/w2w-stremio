@@ -1,10 +1,14 @@
-// Mobile-mode manifest transform.
+// Single-filter manifest transform.
 //
-// Stremio's mobile clients only render the `genre` extra as a visible filter,
+// Stremio mobile and Nuvio render only the `genre` extra as a visible filter,
 // so a separate `year` extra is silently dropped. `applyMobileMode` collapses
-// year options into the genre extra (prefixed "Year: <n>") so mobile users
-// can pick a year. The catalog handler decodes the prefix back (covered in
-// addon-handler.test.js).
+// year options into the genre extra (prefixed "Year: <n>") so those users
+// can still pick a year. The catalog handler decodes the prefix back
+// (covered in addon-handler.test.js).
+//
+// Wire-format key is still `mobileMode` — already-installed URLs use it and
+// must keep working. The configure page sets it implicitly when the user
+// picks Stremio Mobile or Nuvio.
 
 const { buildManifest, applyMobileMode } = require("../lib/manifest-template");
 
@@ -90,13 +94,22 @@ describe("applyMobileMode", () => {
   });
 });
 
-describe("mobileMode checkbox in CONFIG_FIELDS", () => {
+describe("CONFIG_FIELDS", () => {
   const { CONFIG_FIELDS } = require("../lib/manifest-template");
 
-  test("mobileMode is registered as a display-group checkbox", () => {
-    const entry = CONFIG_FIELDS.find((c) => c.key === "mobileMode");
-    expect(entry).toBeDefined();
-    expect(entry.type).toBe("checkbox");
-    expect(entry.group).toBe("display");
+  // mobileMode used to be a user-visible "Mobile mode" checkbox here. It's
+  // now set implicitly by the configure-page client picker, so advertising
+  // it in the manifest config would surface a redundant toggle in Stremio's
+  // gear menu. The wire-format key still flows through the URL segment.
+  test("does not advertise mobileMode as a manifest config field", () => {
+    expect(CONFIG_FIELDS.some((c) => c.key === "mobileMode")).toBe(false);
+  });
+
+  test("contains only exclusion checkboxes (no display group)", () => {
+    for (const f of CONFIG_FIELDS) {
+      expect(f.type).toBe("checkbox");
+      expect(f.group).toBeUndefined();
+      expect(f.key.startsWith("no")).toBe(true);
+    }
   });
 });
