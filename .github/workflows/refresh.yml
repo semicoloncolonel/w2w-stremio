@@ -1,13 +1,12 @@
 name: Refresh catalogs
 
-# Runs the same lib/refresh.js the addon would run on Vercel cron, but here we
-# get GitHub Actions' generous timeout (6h default) instead of Vercel's 60s
-# Hobby cap. Writes the resulting blobs straight to the production Vercel Blob
-# store so the addon (still hosted on Vercel) sees fresh data on the next read.
+# Runs lib/refresh.js daily and writes the resulting blobs to the Azure Blob
+# storage account that backs the addon's Function App. GitHub Actions gives us
+# a 30-minute budget — plenty for the full 25-year backfill.
 #
 # Required repo secrets:
-#   BLOB_READ_WRITE_TOKEN — copy from Vercel → Storage → your Blob store → Tokens
-#   TMDB_API_KEY          — server-side TMDB key for resolving titles to IMDb ids
+#   AZURE_STORAGE_CONNECTION_STRING — Standard storage account, full perms
+#   TMDB_API_KEY                    — server-side TMDB key
 
 on:
   schedule:
@@ -31,8 +30,9 @@ jobs:
       - run: npm ci
       - name: Run refresh
         env:
-          STORAGE_BACKEND: blob
-          BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          STORAGE_BACKEND: azure
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_CONTAINER: catalogs
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           # Pull 25 years of festivals / 25 editions of awards. The default
           # (10) was a leftover from when we ran on Vercel's 60s timeout —

@@ -1,0 +1,15 @@
+.git*
+.vscode
+.cache
+local.settings.json
+test
+tests
+*.test.js
+.github
+.claude
+.env*
+.prettierrc.json
+.prettierignore
+eslint.config.js
+docs
+README.md

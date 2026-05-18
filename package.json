@@ -2,7 +2,7 @@
   "name": "w2w-stremio",
   "version": "1.1.1",
   "description": "Stremio addon aggregating What to Watch recommendations from Decider, Variety, Vulture, RT, and more",
-  "main": "index.js",
+  "main": "src/functions/*.js",
   "scripts": {
     "start": "node index.js",
     "format": "prettier --write .",
@@ -14,6 +14,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@azure/functions": "^4.14.0",
+    "@azure/storage-blob": "^12.31.0",
     "@vercel/blob": "^2.3.3",
     "cheerio": "^1.0.0",
     "fast-xml-parser": "^4.5.0",
