@@ -32,12 +32,7 @@ describe("applyMobileMode", () => {
     const year = oscars.extra.find((e) => e.name === "year");
 
     expect(year).toBeUndefined();
-    expect(genre.options).toEqual([
-      "Year: 2025",
-      "Year: 2024",
-      "Best Picture",
-      "Best Director",
-    ]);
+    expect(genre.options).toEqual(["Year: 2025", "Year: 2024", "Best Picture", "Best Director"]);
   });
 
   test("festival catalogs (no genre extra) get a synthesized genre with year options", () => {
@@ -85,7 +80,10 @@ describe("applyMobileMode", () => {
           id: "x",
           type: "movie",
           name: "X",
-          extra: [{ name: "genre", isRequired: false, options: ["A"] }, { name: "skip", isRequired: false }],
+          extra: [
+            { name: "genre", isRequired: false, options: ["A"] },
+            { name: "skip", isRequired: false },
+          ],
         },
       ],
     };
